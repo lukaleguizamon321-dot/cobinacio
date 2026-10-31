@@ -1,0 +1,6 @@
+{
+  "type": "forge:add_features",
+  "biomes": "#minecraft:is_overworld",
+  "features": "mutantraisedead:iron_crab_nest",
+  "step": "underground_ores"
+}

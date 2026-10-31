@@ -1,19 +1,19 @@
 package com.mutantraisedead;
 
-import net.minecraft.ChatFormatting;
+import io.redspace.ironsspellbooks.api.registry.SpellRegistry;
+import io.redspace.ironsspellbooks.api.spells.ISpellContainer;
+import io.redspace.ironsspellbooks.api.spells.SpellData;
+import io.redspace.ironsspellbooks.gui.arcane_anvil.ArcaneAnvilMenu;
+import io.redspace.ironsspellbooks.registries.ItemRegistry;
 import net.minecraft.nbt.CompoundTag;
-import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
-import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ResultContainer;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.event.TickEvent;
-import net.minecraftforge.event.entity.player.ItemTooltipEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.registries.ForgeRegistries;
@@ -23,31 +23,27 @@ import java.util.List;
 
 /**
  * Receta del yunque arcano de Iron's:
- *   libro con Revivir Muertos (nivel maximo) + Quimica X / Formula Y / Compuesto Z
- *   = el mismo libro, marcado con nivel mutante 1 / 2 / 3.
+ *   pergamino de Revivir Muertos (nivel maximo) + Quimica X / Formula Y / Compuesto Z
+ *   = pergamino de Revive Mutantes (X) / (Y) / (Z) del mismo nivel.
  *
- * El yunque arcano de Iron's no usa recetas normales, asi que cuando un jugador
- * lo tiene abierto revisamos los dos espacios y, si coinciden, ponemos el resultado.
+ *   pergamino de Enraizar (nivel maximo) + semilla de Foliaath (Mowzie's Mobs)
+ *   = Enraizar Plantas (1); cada semilla mas lo sube un nivel, hasta 4.
+ *
+ * El yunque arcano no usa recetas normales: cuando un jugador lo tiene abierto
+ * revisamos los dos espacios y, si coinciden, ponemos el resultado.
  */
 @Mod.EventBusSubscriber(modid = MutantRaiseDead.MODID)
 public final class AnvilHandler {
-    public static final String TAG_TIER = "mutantraisedead_tier";
-
-    private static final String ARCANE_ANVIL_MENU = "io.redspace.ironsspellbooks.gui.arcane_anvil.ArcaneAnvilMenu";
-
     private AnvilHandler() {
     }
 
     @SubscribeEvent
     public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
-        if (event.phase != TickEvent.Phase.END) {
-            return;
-        }
-        if (!(event.player instanceof ServerPlayer player)) {
+        if (event.phase != TickEvent.Phase.END || !(event.player instanceof ServerPlayer player)) {
             return;
         }
         AbstractContainerMenu menu = player.containerMenu;
-        if (menu == null || !menu.getClass().getName().equals(ARCANE_ANVIL_MENU)) {
+        if (!(menu instanceof ArcaneAnvilMenu)) {
             return;
         }
 
@@ -71,45 +67,49 @@ public final class AnvilHandler {
             return;
         }
 
-        int newTier = chemicalTier(modifier);
-        if (newTier <= 0) {
+        if (!base.is(ItemRegistry.SCROLL.get()) || !ISpellContainer.isSpellContainer(base)) {
             return;
         }
-        if (isScroll(base) || !holdsRaiseDead(base, Config.REQUIRED_SPELL_LEVEL.get())) {
+        ISpellContainer container = ISpellContainer.get(base);
+        if (container == null) {
             return;
         }
-        if (getTier(base) >= newTier) {
-            return; // ya tiene ese nivel mutante o uno mejor
-        }
-
-        ItemStack output = base.copy();
-        output.setCount(1);
-        output.getOrCreateTag().putInt(TAG_TIER, newTier);
-        result.set(output);
-    }
-
-    @SubscribeEvent
-    public static void onTooltip(ItemTooltipEvent event) {
-        int tier = getTier(event.getItemStack());
-        if (tier <= 0) {
+        SpellData data = container.getSpellAtIndex(0);
+        if (data == null) {
             return;
         }
-        int percent = (int) Math.round(Config.chanceForTier(tier) * 100.0D);
-        event.getToolTip().add(Component.literal("Revivir Muertos Mutante - nivel " + tier + " (" + percent + "%)")
-                .withStyle(ChatFormatting.DARK_GREEN));
-    }
 
-    /** Nivel mutante guardado en el item (0 si no tiene). */
-    public static int getTier(ItemStack stack) {
-        if (stack == null || stack.isEmpty()) {
-            return 0;
+        // Revivir Muertos + quimica -> Revive Mutantes (X / Y / Z)
+        int tier = chemicalTier(modifier);
+        if (tier > 0) {
+            if (data.getSpell() == SpellRegistry.RAISE_DEAD_SPELL.get()
+                    && data.getLevel() >= Config.REQUIRED_SPELL_LEVEL.get()) {
+                result.set(ModRegistry.createScroll(tier, data.getLevel()));
+            }
+            return;
         }
-        CompoundTag tag = stack.getTag();
-        return tag == null ? 0 : tag.getInt(TAG_TIER);
+
+        // Enraizar + semilla de Foliaath -> Enraizar Plantas (1); cada semilla mas sube un nivel (hasta 4)
+        if (isFoliaathSeed(modifier)) {
+            int current = ModRegistry.plantTierOfSpell(data.getSpell());
+            if (current == 0) {
+                if (data.getSpell() == SpellRegistry.ROOT_SPELL.get()
+                        && data.getLevel() >= Config.REQUIRED_ROOT_LEVEL.get()) {
+                    result.set(ModRegistry.createPlantScroll(1, data.getLevel()));
+                }
+            } else if (current < 4) {
+                result.set(ModRegistry.createPlantScroll(current + 1, data.getLevel()));
+            }
+        }
     }
 
-    /** 1 = Quimica X (Mutant Monsters), 2 = Formula Y, 3 = Compuesto Z (Mutant More). */
-    private static int chemicalTier(ItemStack stack) {
+    static boolean isFoliaathSeed(ItemStack stack) {
+        ResourceLocation key = ForgeRegistries.ITEMS.getKey(stack.getItem());
+        return key != null && key.toString().equals("mowziesmobs:foliaath_seed");
+    }
+
+    /** 1 = Quimica X (Mutant Monsters), 2 = Formula Y, 3 = Compuesto Z (Mutant More), 0 = nada de eso. */
+    static int chemicalTier(ItemStack stack) {
         ResourceLocation key = ForgeRegistries.ITEMS.getKey(stack.getItem());
         if (key != null) {
             String id = key.toString();
@@ -127,31 +127,5 @@ public final class AnvilHandler {
             return 1;
         }
         return 0;
-    }
-
-    private static boolean isScroll(ItemStack stack) {
-        ResourceLocation key = ForgeRegistries.ITEMS.getKey(stack.getItem());
-        return key != null && key.getPath().contains("scroll");
-    }
-
-    /** Revisa los hechizos guardados en el item (formato nuevo y viejo de Iron's). */
-    private static boolean holdsRaiseDead(ItemStack stack, int minLevel) {
-        CompoundTag root = stack.getTag();
-        if (root == null) {
-            return false;
-        }
-        for (String key : new String[]{"irons_spellbooks:spell_container", "ISB_Spells"}) {
-            if (!root.contains(key, Tag.TAG_COMPOUND)) {
-                continue;
-            }
-            ListTag spells = root.getCompound(key).getList("data", Tag.TAG_COMPOUND);
-            for (int i = 0; i < spells.size(); i++) {
-                CompoundTag spell = spells.getCompound(i);
-                if (spell.getString("id").endsWith("raise_dead") && spell.getInt("level") >= minLevel) {
-                    return true;
-                }
-            }
-        }
-        return false;
     }
 }

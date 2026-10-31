@@ -5,13 +5,12 @@ import net.minecraftforge.eventbus.api.IEventBus;
 import net.minecraftforge.fml.ModLoadingContext;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.config.ModConfig;
-import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.javafmlmod.FMLJavaModLoadingContext;
 import org.slf4j.Logger;
 
 /**
- * Mod "puente" entre Iron's Spells 'n Spellbooks, Mutant Monsters y Mutant More.
- * No agrega items ni mobs nuevos: solo combina lo que ya existe.
+ * Agrega los hechizos "Revive Mutantes (X)", "(Y)" y "(Z)": Revivir Muertos de
+ * Iron's Spells 'n Spellbooks, pero con probabilidad de invocar mutantes de Mutant Monsters.
  */
 @Mod(MutantRaiseDead.MODID)
 public class MutantRaiseDead {
@@ -20,11 +19,10 @@ public class MutantRaiseDead {
 
     public MutantRaiseDead() {
         IEventBus modBus = FMLJavaModLoadingContext.get().getModEventBus();
-        modBus.addListener(this::commonSetup);
+        ModRegistry.register(modBus);
+        com.mutantraisedead.crab.ModEntities.register(modBus);
+        com.mutantraisedead.crab.ModBlocks.register(modBus);
+        com.mutantraisedead.crab.ModEffects.register(modBus);
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, Config.SPEC);
-    }
-
-    private void commonSetup(FMLCommonSetupEvent event) {
-        event.enqueueWork(IronsBridge::init);
     }
 }

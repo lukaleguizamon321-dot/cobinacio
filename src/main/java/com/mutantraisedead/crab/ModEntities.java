@@ -26,6 +26,7 @@ public final class ModEntities {
     public static final RegistryObject<EntityType<GiantIronCrabEntity>> GIANT_CRAB = TYPES.register("giant_iron_crab", () ->
             EntityType.Builder.<GiantIronCrabEntity>of(GiantIronCrabEntity::new, MobCategory.MONSTER)
                     .sized(2.0F, 1.6F)
+                    .fireImmune()
                     .clientTrackingRange(10)
                     .build(MutantRaiseDead.MODID + ":giant_iron_crab"));
     public static final RegistryObject<Item> GIANT_CRAB_EGG = ITEMS.register("giant_iron_crab_spawn_egg", () ->
@@ -35,7 +36,8 @@ public final class ModEntities {
         for (GrottolVariant variant : GrottolVariant.values()) {
             RegistryObject<EntityType<GrottolVariantEntity>> type = TYPES.register(variant.id, () ->
                     EntityType.Builder.<GrottolVariantEntity>of((t, level) -> new GrottolVariantEntity(t, level, variant), MobCategory.AMBIENT)
-                            .sized(1.0F, 0.9F)
+                            .sized(1.2F, 0.9F)
+                            .fireImmune()
                             .clientTrackingRange(8)
                             .build(MutantRaiseDead.MODID + ":" + variant.id));
             CRABS.put(variant, type);

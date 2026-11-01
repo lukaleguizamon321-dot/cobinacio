@@ -86,3 +86,13 @@ Variantes del cangrejo de diamante (Grottol) de Mowzie's Mobs. Son mobs propios 
 
 Poné el `.jar` en la carpeta `mods` junto con Iron's Spells 'n Spellbooks 1.20.1-3.16.3 (y sus librerías), Mutant Monsters y Mutant More.
 En un servidor va en el servidor **y** en la carpeta mods de cada jugador.
+
+## v1.5 - Modelo nuevo de los cangrejos (Blockbench)
+- El modelo de los 6 cangrejos sale de `cangry.bbmodel` (geometria en `crab/CrabMeshData.java`).
+- Piezas moviles: cuerpo, caparazon, 4 patas y 2 pinzas. Las pinzas se levantan al usar una habilidad o al recibir un golpe, y el cangrejo se hunde al enterrarse.
+- Las texturas `textures/entity/grottol_*.png` son una hoja de 128x128. El cuerpo dorado es igual en todos; lo que cambia por mineral es el caparazon (el cuadradito del mineral arriba del caparazon) y las patas (cobre, oro y carbon tienen las suyas). Lapislazuli y amatista usan el modelo de cristal (`cangry`/`model.bbmodel`, cristales en la espalda) con el mismo caparazon de roca y las mismas patas lisas.
+
+## v1.6 - Cangrejo gigante nuevo (Blockbench). Ningun cangrejo recibe dano de fuego ni de caida
+- El cangrejo gigante de hierro usa `cangrejo_gigante.bbmodel` (geometria en `CrabMeshData.GIANT`): caparazon de 2x2 de mineral, patas con mineral al frente y tenazas de bloque de hierro en bruto.
+- Mantiene lo de antes: sale del suelo (se hunde y emerge), las tenazas golpean al atacar, 20 golpes de pico.
+- Textura: `textures/entity/giant_iron_crab.png` (256x128, junta todas las texturas del modelo).

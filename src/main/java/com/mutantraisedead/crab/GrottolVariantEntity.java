@@ -60,6 +60,10 @@ public class GrottolVariantEntity extends PathfinderMob {
     private int fleeTicks;
     private int burrowTicks = -1;
 
+    /** Solo en el cliente, para animar el modelo: pinzas en alto y enterrandose. */
+    public int clawTicks;
+    public int clientBurrowTicks = -1;
+
     private int abilityCooldown = 60;
     private int pendingTicks = -1;
     private Vec3 pendingPos = Vec3.ZERO;
@@ -147,8 +151,27 @@ public class GrottolVariantEntity extends PathfinderMob {
     }
 
     @Override
+    public boolean causeFallDamage(float distance, float multiplier, DamageSource source) {
+        return false;
+    }
+
+    /** El cangrejo de cobre es inmune a su propio rayo. */
+    @Override
+    public void thunderHit(ServerLevel level, LightningBolt bolt) {
+        if (variant != GrottolVariant.COPPER) {
+            super.thunderHit(level, bolt);
+        }
+    }
+
+    @Override
     public boolean hurt(DamageSource source, float amount) {
         if (level().isClientSide) {
+            return false;
+        }
+        // Ningun cangrejo recibe dano por fuego ni por caida; el de cobre tampoco por rayos
+        if (source.is(DamageTypeTags.IS_FIRE) || source.is(DamageTypeTags.IS_FALL)
+                || (variant == GrottolVariant.COPPER && source.is(DamageTypeTags.IS_LIGHTNING))) {
+            clearFire();
             return false;
         }
         if (source.is(DamageTypeTags.BYPASSES_INVULNERABILITY)) {
@@ -235,6 +258,12 @@ public class GrottolVariantEntity extends PathfinderMob {
         super.tick();
         if (level().isClientSide) {
             clientParticles();
+            if (clawTicks > 0) {
+                clawTicks--;
+            }
+            if (clientBurrowTicks >= 0) {
+                clientBurrowTicks++;
+            }
             return;
         }
         if (!(level() instanceof ServerLevel serverLevel)) {
@@ -266,6 +295,7 @@ public class GrottolVariantEntity extends PathfinderMob {
         }
         if (fleeTicks >= 60 && onGround() && isDiggable(level().getBlockState(blockPosition().below()))) {
             burrowTicks = 0;
+            level().broadcastEntityEvent(this, (byte) 71);
             fleeTicks = 0;
             return;
         }
@@ -317,6 +347,7 @@ public class GrottolVariantEntity extends PathfinderMob {
                     level.addFreshEntity(fireball);
                     level.playSound(null, getX(), getY(), getZ(), SoundEvents.BLAZE_SHOOT, SoundSource.HOSTILE, 1.0F, 1.0F);
                     abilityCooldown = 50;
+                    level.broadcastEntityEvent(this, (byte) 70);
                 }
             }
             case LAPIS -> {
@@ -324,6 +355,7 @@ public class GrottolVariantEntity extends PathfinderMob {
                     pendingPos = target.position();
                     pendingTicks = 14;
                     abilityCooldown = 100;
+                    level.broadcastEntityEvent(this, (byte) 70);
                 }
             }
             case COPPER -> {
@@ -331,6 +363,7 @@ public class GrottolVariantEntity extends PathfinderMob {
                     pendingPos = target.position();
                     pendingTicks = 24;
                     abilityCooldown = 180;
+                    level.broadcastEntityEvent(this, (byte) 70);
                     playSound(SoundEvents.LIGHTNING_BOLT_IMPACT, 0.3F, 2.0F);
                 }
             }
@@ -359,6 +392,17 @@ public class GrottolVariantEntity extends PathfinderMob {
                 bolt.moveTo(pendingPos.x, pendingPos.y, pendingPos.z);
                 level.addFreshEntity(bolt);
             }
+        }
+    }
+
+    @Override
+    public void handleEntityEvent(byte id) {
+        if (id == 70) {
+            clawTicks = 24;
+        } else if (id == 71) {
+            clientBurrowTicks = 0;
+        } else {
+            super.handleEntityEvent(id);
         }
     }
 

@@ -2,121 +2,168 @@ package com.mutantraisedead.crab;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mutantraisedead.MutantRaiseDead;
 import net.minecraft.client.model.EntityModel;
-import net.minecraft.client.model.geom.ModelLayerLocation;
-import net.minecraft.client.model.geom.ModelPart;
-import net.minecraft.client.model.geom.PartPose;
-import net.minecraft.client.model.geom.builders.CubeListBuilder;
-import net.minecraft.client.model.geom.builders.LayerDefinition;
-import net.minecraft.client.model.geom.builders.MeshDefinition;
-import net.minecraft.client.model.geom.builders.PartDefinition;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
+import org.joml.Matrix3f;
+import org.joml.Matrix4f;
+import org.joml.Quaternionf;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * Cangrejo gigante: cuerpo de piedra cubierto con armadura de hierro en bruto,
- * patas de hierro en bruto y dos tenazas que son bloques de hierro en bruto.
- * Textura 256x128: izquierda = piedra, derecha = hierro en bruto.
+ * Cangrejo gigante hecho en Blockbench ("cangrejo_gigante.bbmodel"):
+ * caparazon de 2x2 bloques de mineral, patas con mineral al frente y tenazas de bloque de hierro en bruto.
+ * Piezas moviles: body (cuerpo y ojos), shell (caparazon), leg0..leg3 (patas), clawP / clawN (tenazas).
+ * Las animaciones se escriben con las direcciones de Blockbench (Y arriba, el frente es -Z).
  */
 public class GiantIronCrabModel extends EntityModel<GiantIronCrabEntity> {
-    public static final ModelLayerLocation LAYER =
-            new ModelLayerLocation(ResourceLocation.fromNamespaceAndPath(MutantRaiseDead.MODID, "giant_iron_crab"), "main");
+    private static final float UNIT = 1.0F / 16.0F;
+    private static final float FLOOR = 1.501F;
+    private static final String[] ORDER = {"body", "shell", "leg0", "leg1", "leg2", "leg3", "clawP", "clawN"};
 
-    private final ModelPart root;
-    private final ModelPart[] legs = new ModelPart[6];
-    private final ModelPart clawLeft;
-    private final ModelPart clawRight;
-    private final ModelPart[] plates = new ModelPart[3];
+    /** Cuanto se hunde (en bloques del modelo) mientras sale del suelo. */
+    private static final float EMERGE_DEPTH = 2.9F;
 
-    public GiantIronCrabModel(ModelPart root) {
-        this.root = root;
-        for (int i = 0; i < 6; i++) {
-            legs[i] = root.getChild("leg" + i);
-        }
-        clawLeft = root.getChild("claw_left");
-        clawRight = root.getChild("claw_right");
-        for (int i = 0; i < 3; i++) {
-            plates[i] = root.getChild("plate" + i);
-        }
+    private static final class Quad {
+        float nx;
+        float ny;
+        float nz;
+        final float[] v = new float[20];
     }
 
-    public static LayerDefinition createLayer() {
-        MeshDefinition mesh = new MeshDefinition();
-        PartDefinition root = mesh.getRoot();
+    private static final class Group {
+        float px;
+        float py;
+        float pz;
+        final List<Quad> quads = new ArrayList<>();
+    }
 
-        // Cuerpo de piedra
-        root.addOrReplaceChild("body", CubeListBuilder.create()
-                        .texOffs(0, 0).addBox(-9.0F, -16.0F, -9.0F, 18.0F, 10.0F, 18.0F),
-                PartPose.offset(0.0F, 24.0F, 0.0F));
+    private static final Group[] GROUPS = parse(CrabMeshData.GIANT);
 
-        // Armadura de hierro en bruto: placas apiladas arriba (lisas, suben y bajan suave)
-        float[][] plates = {{18, 4}, {12, 4}, {6, 3}};
-        float y = -16.0F;
-        for (int i = 0; i < plates.length; i++) {
-            float w = plates[i][0];
-            float h = plates[i][1];
-            root.addOrReplaceChild("plate" + i, CubeListBuilder.create()
-                            .texOffs(128, 0).addBox(-w / 2, -h, -w / 2, w, h, w),
-                    PartPose.offset(0.0F, 24.0F + y, 0.0F));
-            y -= h;
+    private final float[] rx = new float[ORDER.length];
+    private final float[] ry = new float[ORDER.length];
+    private final float[] rz = new float[ORDER.length];
+    private float bob;
+    private float sink;
+
+    private static int indexOf(String name) {
+        for (int i = 0; i < ORDER.length; i++) {
+            if (ORDER[i].equals(name)) {
+                return i;
+            }
         }
-        // Placas laterales y trasera
-        root.addOrReplaceChild("armor_sides", CubeListBuilder.create()
-                        .texOffs(128, 0).addBox(-11.0F, -16.0F, -7.0F, 2.0F, 9.0F, 14.0F)
-                        .texOffs(128, 0).addBox(9.0F, -16.0F, -7.0F, 2.0F, 9.0F, 14.0F)
-                        .texOffs(128, 0).addBox(-7.0F, -16.0F, 9.0F, 14.0F, 9.0F, 2.0F),
-                PartPose.offset(0.0F, 24.0F, 0.0F));
+        throw new IllegalStateException("Pieza desconocida en el modelo: " + name);
+    }
 
-        // 6 patas de hierro en bruto
-        for (int i = 0; i < 6; i++) {
-            float side = i < 3 ? 1.0F : -1.0F;
-            float z = (i % 3 - 1) * 6.0F;
-            root.addOrReplaceChild("leg" + i, CubeListBuilder.create()
-                            .texOffs(128, 0).addBox(-2.0F, 0.0F, -2.0F, 4.0F, 12.0F, 4.0F),
-                    PartPose.offsetAndRotation(side * 10.0F, 17.0F, z, 0.0F, 0.0F, -side * 1.0F));
+    private static Group[] parse(String data) {
+        Group[] groups = new Group[ORDER.length];
+        for (int i = 0; i < groups.length; i++) {
+            groups[i] = new Group();
         }
-
-        // Tenazas: brazo + bloque de hierro en bruto, al frente
-        for (int i = 0; i < 2; i++) {
-            float side = i == 0 ? 1.0F : -1.0F;
-            root.addOrReplaceChild(i == 0 ? "claw_left" : "claw_right", CubeListBuilder.create()
-                            .texOffs(128, 0).addBox(-2.0F, -2.0F, -10.0F, 4.0F, 4.0F, 10.0F)
-                            .texOffs(128, 0).addBox(-4.0F, -4.0F, -18.0F, 8.0F, 8.0F, 8.0F)
-                            .texOffs(128, 0).addBox(-2.0F, -7.0F, -17.0F, 4.0F, 3.0F, 6.0F),
-                    PartPose.offset(side * 8.0F, 14.0F, -9.0F));
+        for (String raw : data.split("\n")) {
+            String line = raw.trim();
+            if (line.isEmpty()) {
+                continue;
+            }
+            String[] t = line.split("\\s+");
+            Group g = groups[indexOf(t[1])];
+            if (t[0].equals("G")) {
+                g.px = Float.parseFloat(t[2]);
+                g.py = Float.parseFloat(t[3]);
+                g.pz = Float.parseFloat(t[4]);
+            } else {
+                Quad q = new Quad();
+                q.nx = Float.parseFloat(t[2]);
+                q.ny = Float.parseFloat(t[3]);
+                q.nz = Float.parseFloat(t[4]);
+                for (int k = 0; k < 20; k++) {
+                    q.v[k] = Float.parseFloat(t[5 + k]);
+                }
+                g.quads.add(q);
+            }
         }
-        return LayerDefinition.create(mesh, 256, 128);
+        return groups;
     }
 
     @Override
     public void setupAnim(GiantIronCrabEntity entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
+        for (int i = 0; i < ORDER.length; i++) {
+            rx[i] = 0.0F;
+            ry[i] = 0.0F;
+            rz[i] = 0.0F;
+        }
+        float walk = Mth.clamp(limbSwingAmount * 1.8F, 0.0F, 1.0F);
+
         // Saliendo del suelo
         float emerge = entity.getEmergeTicks() / (float) GiantIronCrabEntity.EMERGE_TICKS;
-        root.y = emerge * 24.0F;
+        sink = emerge * EMERGE_DEPTH;
 
-        for (int i = 0; i < 6; i++) {
-            float side = i < 3 ? 1.0F : -1.0F;
-            float baseYaw = (i % 3 - 1) * 0.3F * side;
-            legs[i].yRot = baseYaw + Mth.cos(limbSwing * 0.7F + (i % 2) * Mth.PI) * 0.5F * limbSwingAmount;
+        // Patas: pesadas, de a pares en diagonal
+        for (int i = 0; i < 4; i++) {
+            int idx = 2 + i;
+            float side = i < 2 ? 1.0F : -1.0F;
+            float phase = (i == 0 || i == 2) ? 0.0F : Mth.PI;
+            float t = limbSwing * 0.8F + phase;
+            ry[idx] = side * Mth.cos(t) * 0.25F * walk;
+            rz[idx] = side * Math.max(0.0F, Mth.sin(t)) * 0.2F * walk;
         }
 
-        // Armadura lisa: respira suave
-        for (int i = 0; i < plates.length; i++) {
-            plates[i].y = 24.0F - 16.0F - (i == 0 ? 0 : i == 1 ? 4 : 8) + Mth.sin(ageInTicks * 0.06F) * 0.6F;
+        // Tenazas: al atacar se levantan y golpean hacia abajo; en reposo abren y cierran despacio
+        float swing = entity.attackAnim;
+        for (int i = 0; i < 2; i++) {
+            int idx = 6 + i;
+            float side = i == 0 ? 1.0F : -1.0F;
+            float idle = Mth.sin(ageInTicks * 0.08F + i * 1.3F);
+            if (swing > 0.0F) {
+                rx[idx] = 0.15F + 0.8F * Mth.sin(swing * Mth.TWO_PI);
+                ry[idx] = side * (0.1F + 0.3F * Mth.sin(swing * Mth.PI));
+            } else {
+                rx[idx] = 0.15F + idle * 0.05F;
+                ry[idx] = side * (0.1F + idle * 0.08F);
+            }
         }
 
-        // Tenazas: golpe hacia abajo al atacar, y se abren/cierran al descansar
-        float swing = Mth.sin(entity.attackAnim * Mth.PI);
-        float idle = Mth.sin(ageInTicks * 0.08F) * 0.08F;
-        clawLeft.xRot = -0.45F + swing * 1.0F + idle;
-        clawRight.xRot = -0.45F + swing * 1.0F - idle;
-        clawLeft.yRot = 0.15F + swing * 0.3F;
-        clawRight.yRot = -0.15F - swing * 0.3F;
+        // Caparazon: respira y se sacude un poco al caminar
+        rx[1] = Mth.sin(ageInTicks * 0.05F) * 0.015F;
+        rz[1] = Mth.sin(limbSwing * 0.8F) * 0.02F * walk;
+
+        bob = Math.abs(Mth.cos(limbSwing * 0.8F)) * 0.03F * walk;
     }
 
     @Override
     public void renderToBuffer(PoseStack poseStack, VertexConsumer buffer, int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {
-        root.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        for (int i = 0; i < GROUPS.length; i++) {
+            Group g = GROUPS[i];
+            poseStack.pushPose();
+            // En el modelo de Minecraft Y apunta hacia abajo, asi que "subir" es restar.
+            poseStack.translate(0.0F, sink - bob, 0.0F);
+
+            float pvx = -g.px * UNIT;
+            float pvy = FLOOR - g.py * UNIT;
+            float pvz = g.pz * UNIT;
+            poseStack.translate(pvx, pvy, pvz);
+            poseStack.mulPose(new Quaternionf().rotationZYX(rz[i], -ry[i], -rx[i]));
+            poseStack.translate(-pvx, -pvy, -pvz);
+
+            Matrix4f pose = poseStack.last().pose();
+            Matrix3f normal = poseStack.last().normal();
+            for (Quad q : g.quads) {
+                float nx = -q.nx;
+                float ny = -q.ny;
+                float nz = q.nz;
+                for (int k = 0; k < 4; k++) {
+                    int o = k * 5;
+                    buffer.vertex(pose, -q.v[o] * UNIT, FLOOR - q.v[o + 1] * UNIT, q.v[o + 2] * UNIT)
+                            .color(red, green, blue, alpha)
+                            .uv(q.v[o + 3], q.v[o + 4])
+                            .overlayCoords(packedOverlay)
+                            .uv2(packedLight)
+                            .normal(normal, nx, ny, nz)
+                            .endVertex();
+                }
+            }
+            poseStack.popPose();
+        }
     }
 }

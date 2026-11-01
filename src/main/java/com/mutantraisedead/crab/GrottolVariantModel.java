@@ -2,165 +2,181 @@ package com.mutantraisedead.crab;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.blaze3d.vertex.VertexConsumer;
-import com.mutantraisedead.MutantRaiseDead;
 import net.minecraft.client.model.EntityModel;
-import net.minecraft.client.model.geom.ModelLayerLocation;
-import net.minecraft.client.model.geom.ModelPart;
-import net.minecraft.client.model.geom.PartPose;
-import net.minecraft.client.model.geom.builders.CubeListBuilder;
-import net.minecraft.client.model.geom.builders.LayerDefinition;
-import net.minecraft.client.model.geom.builders.MeshDefinition;
-import net.minecraft.client.model.geom.builders.PartDefinition;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.Mth;
+import org.joml.Matrix3f;
+import org.joml.Matrix4f;
+import org.joml.Quaternionf;
 
-import java.util.Locale;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * Modelo del cangrejo: cuerpo de piedra con 6 patas y, arriba, el material.
- * Textura 128x64: la mitad izquierda es la piedra, la derecha es el material.
- *  - METAL: placas lisas apiladas, con animacion suave
- *  - CRYSTAL: cristales puntiagudos, con animacion entrecortada
- *  - LUMP: trozos irregulares (carbon), con temblor
+ * Modelo del cangrejo hecho en Blockbench ("cangry.bbmodel").
+ * La geometria esta en CrabMeshData y se divide en piezas moviles:
+ *  body (cuerpo y ojos), shell (caparazon de arriba), leg0..leg3 (patas), clawP / clawN (pinzas).
+ * Las animaciones se escriben con las mismas direcciones que en Blockbench
+ * (Y arriba, el frente es -Z) y aca se pasan al sistema de Minecraft.
  */
 public class GrottolVariantModel extends EntityModel<GrottolVariantEntity> {
-    private static final int TOP_COUNT_METAL = 3;
-    private static final int TOP_COUNT_CRYSTAL = 6;
-    private static final int TOP_COUNT_LUMP = 5;
+    private static final float UNIT = 1.0F / 16.0F;
+    private static final float FLOOR = 1.501F;
+    private static final String[] ORDER = {"body", "shell", "leg0", "leg1", "leg2", "leg3", "clawP", "clawN"};
 
-    private final GrottolVariant.Shape shape;
-    private final ModelPart root;
-    private final ModelPart[] legs = new ModelPart[6];
-    private final ModelPart[] top;
-
-    public GrottolVariantModel(ModelPart root, GrottolVariant.Shape shape) {
-        this.root = root;
-        this.shape = shape;
-        for (int i = 0; i < 6; i++) {
-            legs[i] = root.getChild("leg" + i);
-        }
-        int count = switch (shape) {
-            case METAL -> TOP_COUNT_METAL;
-            case CRYSTAL -> TOP_COUNT_CRYSTAL;
-            case LUMP -> TOP_COUNT_LUMP;
-        };
-        top = new ModelPart[count];
-        for (int i = 0; i < count; i++) {
-            top[i] = root.getChild("top" + i);
-        }
+    private static final class Quad {
+        float nx;
+        float ny;
+        float nz;
+        final float[] v = new float[20];
     }
 
-    public static ModelLayerLocation layer(GrottolVariant.Shape shape) {
-        return new ModelLayerLocation(
-                ResourceLocation.fromNamespaceAndPath(MutantRaiseDead.MODID, "grottol_" + shape.name().toLowerCase(Locale.ROOT)), "main");
+    private static final class Group {
+        float px;
+        float py;
+        float pz;
+        final List<Quad> quads = new ArrayList<>();
     }
 
-    public static LayerDefinition createLayer(GrottolVariant.Shape shape) {
-        MeshDefinition mesh = new MeshDefinition();
-        PartDefinition root = mesh.getRoot();
+    private static final Group[] METAL_GROUPS = parse(CrabMeshData.DATA);
+    private static final Group[] CRYSTAL_GROUPS = parse(CrabMeshData.CRYSTAL);
 
-        // Cuerpo de piedra (textura de la izquierda)
-        root.addOrReplaceChild("body", CubeListBuilder.create()
-                        .texOffs(0, 0).addBox(-5.0F, -9.0F, -5.0F, 10.0F, 6.0F, 10.0F)
-                        .texOffs(0, 0).addBox(-4.0F, -10.0F, -4.0F, 8.0F, 1.0F, 8.0F),
-                PartPose.offset(0.0F, 24.0F, 0.0F));
+    private final Group[] groups;
 
-        // 6 patas: 3 por lado, abiertas hacia afuera
-        for (int i = 0; i < 6; i++) {
-            float side = i < 3 ? 1.0F : -1.0F;
-            float z = (i % 3 - 1) * 3.5F;
-            root.addOrReplaceChild("leg" + i, CubeListBuilder.create()
-                            .texOffs(0, 0).addBox(-1.0F, 0.0F, -1.0F, 2.0F, 6.0F, 2.0F),
-                    PartPose.offsetAndRotation(side * 5.0F, 20.0F, z, 0.0F, 0.0F, -side * 0.9F));
-        }
+    private final float[] rx = new float[ORDER.length];
+    private final float[] ry = new float[ORDER.length];
+    private final float[] rz = new float[ORDER.length];
+    private float bob;
+    private float sink;
 
-        // Material de arriba (textura de la derecha)
-        switch (shape) {
-            case METAL -> {
-                float[][] plates = {{8, 2}, {6, 2}, {4, 2}};
-                float y = -10.0F;
-                for (int i = 0; i < plates.length; i++) {
-                    float w = plates[i][0];
-                    root.addOrReplaceChild("top" + i, CubeListBuilder.create()
-                                    .texOffs(64, 0).addBox(-w / 2, -2.0F, -w / 2, w, 2.0F, w),
-                            PartPose.offset(0.0F, 24.0F + y, 0.0F));
-                    y -= 2.0F;
-                }
-            }
-            case CRYSTAL -> {
-                float[] heights = {11, 8, 7, 9, 6, 7};
-                for (int i = 0; i < TOP_COUNT_CRYSTAL; i++) {
-                    float angle = i == 0 ? 0.0F : (i - 1) * (Mth.TWO_PI / 5.0F);
-                    float radius = i == 0 ? 0.0F : 2.8F;
-                    float px = Mth.cos(angle) * radius;
-                    float pz = Mth.sin(angle) * radius;
-                    float tilt = i == 0 ? 0.0F : 0.4F;
-                    root.addOrReplaceChild("top" + i, CubeListBuilder.create()
-                                    .texOffs(64, 0).addBox(-1.5F, -heights[i], -1.5F, 3.0F, heights[i], 3.0F),
-                            PartPose.offsetAndRotation(px, 14.0F, pz, -Mth.sin(angle) * tilt, 0.0F, Mth.cos(angle) * tilt));
-                }
-            }
-            case LUMP -> {
-                // {x, y, z, ancho, alto, fondo, rotacion}
-                float[][] lumps = {
-                        {-1.5F, -10.0F, 0.5F, 6, 5, 6, 0.3F},
-                        {2.0F, -10.0F, -2.5F, 5, 4, 5, -0.4F},
-                        {-2.5F, -13.0F, -1.5F, 4, 6, 4, 0.7F},
-                        {1.5F, -13.0F, 1.0F, 4, 3, 4, -0.2F},
-                        {0.0F, -16.0F, 0.0F, 3, 3, 3, 0.5F}
-                };
-                for (int i = 0; i < lumps.length; i++) {
-                    float[] l = lumps[i];
-                    root.addOrReplaceChild("top" + i, CubeListBuilder.create()
-                                    .texOffs(64, 0).addBox(-l[3] / 2, -l[4], -l[5] / 2, l[3], l[4], l[5]),
-                            PartPose.offsetAndRotation(l[0], 24.0F + l[1], l[2], 0.0F, l[6], 0.0F));
-                }
+    private static int indexOf(String name) {
+        for (int i = 0; i < ORDER.length; i++) {
+            if (ORDER[i].equals(name)) {
+                return i;
             }
         }
-        return LayerDefinition.create(mesh, 128, 64);
+        throw new IllegalStateException("Pieza desconocida en el modelo: " + name);
+    }
+
+    private static Group[] parse(String data) {
+        Group[] groups = new Group[ORDER.length];
+        for (int i = 0; i < groups.length; i++) {
+            groups[i] = new Group();
+        }
+        for (String raw : data.split("\n")) {
+            String line = raw.trim();
+            if (line.isEmpty()) {
+                continue;
+            }
+            String[] t = line.split("\\s+");
+            Group g = groups[indexOf(t[1])];
+            if (t[0].equals("G")) {
+                g.px = Float.parseFloat(t[2]);
+                g.py = Float.parseFloat(t[3]);
+                g.pz = Float.parseFloat(t[4]);
+            } else {
+                Quad q = new Quad();
+                q.nx = Float.parseFloat(t[2]);
+                q.ny = Float.parseFloat(t[3]);
+                q.nz = Float.parseFloat(t[4]);
+                for (int k = 0; k < 20; k++) {
+                    q.v[k] = Float.parseFloat(t[5 + k]);
+                }
+                g.quads.add(q);
+            }
+        }
+        return groups;
+    }
+
+    /** crystal = true para lapislazuli y amatista (llevan cristales en la espalda). */
+    public GrottolVariantModel(boolean crystal) {
+        this.groups = crystal ? CRYSTAL_GROUPS : METAL_GROUPS;
     }
 
     @Override
     public void setupAnim(GrottolVariantEntity entity, float limbSwing, float limbSwingAmount, float ageInTicks, float netHeadYaw, float headPitch) {
-        // Patas: caminan de costado como un cangrejo
-        for (int i = 0; i < 6; i++) {
-            float side = i < 3 ? 1.0F : -1.0F;
-            float baseYaw = (i % 3 - 1) * 0.35F * side;
-            legs[i].yRot = baseYaw + Mth.cos(limbSwing * 0.9F + (i % 2) * Mth.PI) * 0.6F * limbSwingAmount;
+        for (int i = 0; i < ORDER.length; i++) {
+            rx[i] = 0.0F;
+            ry[i] = 0.0F;
+            rz[i] = 0.0F;
+        }
+        float walk = Mth.clamp(limbSwingAmount * 1.8F, 0.0F, 1.0F);
+        boolean alert = entity.clawTicks > 0 || entity.hurtTime > 0;
+
+        // Patas: de a pares en diagonal, una sube mientras la otra apoya
+        for (int i = 0; i < 4; i++) {
+            int idx = 2 + i;
+            float side = i < 2 ? 1.0F : -1.0F;
+            float phase = (i == 0 || i == 2) ? 0.0F : Mth.PI;
+            float t = limbSwing * 1.1F + phase;
+            ry[idx] = side * Mth.cos(t) * 0.35F * walk;
+            rz[idx] = side * (Math.max(0.0F, Mth.sin(t)) * 0.30F * walk + Mth.sin(ageInTicks * 0.1F + i * 1.7F) * 0.02F);
         }
 
-        switch (shape) {
-            case METAL -> {
-                // Suave y continuo: las placas giran despacio y "respiran"
-                for (int i = 0; i < top.length; i++) {
-                    top[i].yRot = Mth.sin(ageInTicks * 0.04F + i * 0.9F) * 0.35F;
-                    top[i].y = 24.0F - 10.0F - i * 2.0F + Mth.sin(ageInTicks * 0.08F) * 0.5F;
-                }
+        // Pinzas: quietas abren y cierran despacio; en alerta (habilidad o golpe) se levantan y chasquean
+        for (int i = 0; i < 2; i++) {
+            int idx = 6 + i;
+            float side = i == 0 ? 1.0F : -1.0F;
+            if (alert) {
+                rx[idx] = 0.8F + Mth.sin(ageInTicks * 1.4F + i) * 0.12F;
+                ry[idx] = side * (0.2F + Mth.sin(ageInTicks * 1.6F) * 0.3F);
+            } else {
+                rx[idx] = 0.1F + Mth.sin(ageInTicks * 0.12F + i * 1.3F) * 0.04F;
+                ry[idx] = side * (0.05F + Mth.sin(ageInTicks * 0.09F + i * 1.3F) * 0.12F);
             }
-            case CRYSTAL -> {
-                // Entrecortado: cada cristal salta de posicion cada pocos ticks
-                int step = (int) (ageInTicks / 5.0F);
-                for (int i = 0; i < top.length; i++) {
-                    float jitter = Mth.sin(step * 1.7F + i * 2.3F);
-                    float baseX = i == 0 ? 0.0F : -Mth.sin((i - 1) * (Mth.TWO_PI / 5.0F)) * 0.4F;
-                    float baseZ = i == 0 ? 0.0F : Mth.cos((i - 1) * (Mth.TWO_PI / 5.0F)) * 0.4F;
-                    top[i].xRot = baseX + jitter * 0.08F;
-                    top[i].zRot = baseZ + Mth.cos(step * 1.3F + i) * 0.08F;
-                }
-            }
-            case LUMP -> {
-                // Temblor rugoso del carbon
-                int step = (int) (ageInTicks / 2.0F);
-                for (int i = 0; i < top.length; i++) {
-                    top[i].xRot = Mth.sin(step * 2.1F + i * 3.1F) * 0.05F;
-                    top[i].zRot = Mth.cos(step * 1.9F + i * 1.7F) * 0.05F;
-                }
+        }
+
+        // Caparazon: respira, y se sacude un poco al caminar
+        rx[1] = Mth.sin(ageInTicks * 0.07F) * 0.025F;
+        rz[1] = Mth.sin(limbSwing * 1.1F) * 0.03F * walk + (alert ? Mth.sin(ageInTicks * 2.0F) * 0.03F : 0.0F);
+
+        // Rebote al caminar
+        bob = Math.abs(Mth.cos(limbSwing * 1.1F)) * 0.02F * walk;
+
+        // Enterrandose: se hunde en el suelo y las patas se agitan
+        int burrow = entity.clientBurrowTicks;
+        sink = burrow < 0 ? 0.0F : Mth.clamp(burrow / 18.0F, 0.0F, 1.0F) * 0.9F;
+        if (burrow >= 0) {
+            for (int i = 0; i < 4; i++) {
+                int idx = 2 + i;
+                float side = i < 2 ? 1.0F : -1.0F;
+                rz[idx] = side * (0.2F + Mth.sin(ageInTicks * 1.2F + i) * 0.2F);
             }
         }
     }
 
     @Override
     public void renderToBuffer(PoseStack poseStack, VertexConsumer buffer, int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {
-        root.render(poseStack, buffer, packedLight, packedOverlay, red, green, blue, alpha);
+        for (int i = 0; i < groups.length; i++) {
+            Group g = groups[i];
+            poseStack.pushPose();
+            // En el modelo de Minecraft Y apunta hacia abajo, asi que "subir" es restar.
+            poseStack.translate(0.0F, sink - bob, 0.0F);
+
+            float pvx = -g.px * UNIT;
+            float pvy = FLOOR - g.py * UNIT;
+            float pvz = g.pz * UNIT;
+            poseStack.translate(pvx, pvy, pvz);
+            poseStack.mulPose(new Quaternionf().rotationZYX(rz[i], -ry[i], -rx[i]));
+            poseStack.translate(-pvx, -pvy, -pvz);
+
+            Matrix4f pose = poseStack.last().pose();
+            Matrix3f normal = poseStack.last().normal();
+            for (Quad q : g.quads) {
+                float nx = -q.nx;
+                float ny = -q.ny;
+                float nz = q.nz;
+                for (int k = 0; k < 4; k++) {
+                    int o = k * 5;
+                    buffer.vertex(pose, -q.v[o] * UNIT, FLOOR - q.v[o + 1] * UNIT, q.v[o + 2] * UNIT)
+                            .color(red, green, blue, alpha)
+                            .uv(q.v[o + 3], q.v[o + 4])
+                            .overlayCoords(packedOverlay)
+                            .uv2(packedLight)
+                            .normal(normal, nx, ny, nz)
+                            .endVertex();
+                }
+            }
+            poseStack.popPose();
+        }
     }
 }

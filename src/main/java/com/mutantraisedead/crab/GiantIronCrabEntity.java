@@ -173,8 +173,18 @@ public class GiantIronCrabEntity extends PathfinderMob {
     // ------------------------------------------------------------------
 
     @Override
+    public boolean causeFallDamage(float distance, float multiplier, DamageSource source) {
+        return false;
+    }
+
+    @Override
     public boolean hurt(DamageSource source, float amount) {
         if (level().isClientSide || getEmergeTicks() > 0) {
+            return false;
+        }
+        // Sin dano por fuego ni por caida
+        if (source.is(DamageTypeTags.IS_FIRE) || source.is(DamageTypeTags.IS_FALL)) {
+            clearFire();
             return false;
         }
         if (source.is(DamageTypeTags.BYPASSES_INVULNERABILITY)) {

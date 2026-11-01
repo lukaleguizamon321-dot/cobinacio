@@ -14,14 +14,6 @@ public final class ClientSetup {
     }
 
     @SubscribeEvent
-    public static void onLayers(EntityRenderersEvent.RegisterLayerDefinitions event) {
-        for (GrottolVariant.Shape shape : GrottolVariant.Shape.values()) {
-            event.registerLayerDefinition(GrottolVariantModel.layer(shape), () -> GrottolVariantModel.createLayer(shape));
-        }
-        event.registerLayerDefinition(GiantIronCrabModel.LAYER, GiantIronCrabModel::createLayer);
-    }
-
-    @SubscribeEvent
     public static void onRenderers(EntityRenderersEvent.RegisterRenderers event) {
         for (GrottolVariant variant : GrottolVariant.values()) {
             EntityRendererProvider<GrottolVariantEntity> provider = context -> new GrottolVariantRenderer(context, variant);

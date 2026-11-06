@@ -1,0 +1,26 @@
+{
+  "parent": "mutantraisedead:root",
+  "display": {
+    "icon": {
+      "item": "minecraft:emerald"
+    },
+    "title": {
+      "translate": "advancements.mutantraisedead.ayuda_comercial.title"
+    },
+    "description": {
+      "translate": "advancements.mutantraisedead.ayuda_comercial.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "trigger": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "rewards": {
+    "experience": 50
+  }
+}

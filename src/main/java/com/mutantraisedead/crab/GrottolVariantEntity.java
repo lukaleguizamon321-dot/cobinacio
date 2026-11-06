@@ -1,11 +1,19 @@
 package com.mutantraisedead.crab;
 
+import com.mutantraisedead.Achievements;
 import com.mutantraisedead.Config;
+import com.mutantraisedead.GuardHandler;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.BlockParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.NbtUtils;
+import net.minecraft.nbt.Tag;
+import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
@@ -24,13 +32,21 @@ import net.minecraft.world.entity.ai.attributes.AttributeSupplier;
 import net.minecraft.world.entity.ai.attributes.Attributes;
 import net.minecraft.world.entity.ai.goal.AvoidEntityGoal;
 import net.minecraft.world.entity.ai.goal.FloatGoal;
+import net.minecraft.world.entity.ai.goal.Goal;
 import net.minecraft.world.entity.ai.goal.LookAtPlayerGoal;
+import net.minecraft.world.entity.ai.goal.MeleeAttackGoal;
 import net.minecraft.world.entity.ai.goal.RandomLookAroundGoal;
+import net.minecraft.world.entity.ai.goal.TemptGoal;
 import net.minecraft.world.entity.ai.goal.WaterAvoidingRandomStrollGoal;
+import net.minecraft.world.entity.ai.goal.target.NearestAttackableTargetGoal;
+import net.minecraft.world.entity.monster.Enemy;
+import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.SmallFireball;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraft.world.item.PickaxeItem;
+import net.minecraft.world.item.crafting.Ingredient;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.LevelAccessor;
@@ -40,7 +56,11 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
+import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
 
 /**
  * Cangrejo de material (version propia del Grottol de Mowzie's Mobs):
@@ -48,6 +68,8 @@ import java.util.List;
  *  - solo muere de un golpe con un pico (el hierro aguanta 3 golpes)
  *  - aparece en cuevas
  *  - cada material tiene una pasiva distinta
+ *  - redstone (te marca), diamante (ataca y da mala suerte al morir) y esmeralda (descuento a aldeanos)
+ *    no se entierran
  */
 public class GrottolVariantEntity extends PathfinderMob {
     private final GrottolVariant variant;
@@ -65,6 +87,13 @@ public class GrottolVariantEntity extends PathfinderMob {
     public int clientBurrowTicks = -1;
 
     private int abilityCooldown = 60;
+
+    /** Cangrejo de esmeralda: aldeanos a los que ya les hizo descuento (para el logro Ayuda comercial). */
+    private final Set<UUID> discounted = new HashSet<>();
+    /** Cangrejo de carbon: cuantos disparos hizo y a quienes les pego (para el logro Que arde). */
+    private int shotsFired;
+    private final Set<UUID> shotPlayers = new HashSet<>();
+
     private int pendingTicks = -1;
     private Vec3 pendingPos = Vec3.ZERO;
 
@@ -73,6 +102,8 @@ public class GrottolVariantEntity extends PathfinderMob {
         this.variant = variant;
         this.hitsLeft = variant == GrottolVariant.IRON ? 3 : 1;
         this.xpReward = 10;
+        // Las metas dependen de la variante, que recien se conoce ahora (registerGoals corre antes).
+        setupGoals();
     }
 
     @Override
@@ -84,6 +115,11 @@ public class GrottolVariantEntity extends PathfinderMob {
         return variant;
     }
 
+    /** true si es un cangrejo invocado con el hechizo Invocar Cangrejo (guardian de un jugador). */
+    public boolean isSummoned() {
+        return GuardHandler.isAllied(this);
+    }
+
     public static AttributeSupplier.Builder createAttributes(GrottolVariant variant) {
         AttributeSupplier.Builder builder = Mob.createMobAttributes()
                 .add(Attributes.MAX_HEALTH, 20.0D)
@@ -92,6 +128,9 @@ public class GrottolVariantEntity extends PathfinderMob {
         if (variant == GrottolVariant.IRON) {
             builder.add(Attributes.ARMOR, 14.0D).add(Attributes.ARMOR_TOUGHNESS, 4.0D);
         }
+        // Los cangrejos invocados (hechizo Invocar Cangrejo) pelean; el de diamante tambien en estado salvaje.
+        builder.add(Attributes.ATTACK_DAMAGE, variant == GrottolVariant.IRON ? 6.0D : 4.0D)
+                .add(Attributes.ATTACK_KNOCKBACK, 0.3D);
         return builder;
     }
 
@@ -104,12 +143,121 @@ public class GrottolVariantEntity extends PathfinderMob {
 
     @Override
     protected void registerGoals() {
+        // Vacio a proposito: las metas se arman en setupGoals(), cuando ya se sabe la variante.
+    }
+
+    private void setupGoals() {
         this.goalSelector.addGoal(0, new FloatGoal(this));
-        this.goalSelector.addGoal(1, new AvoidEntityGoal<>(this, Player.class, 16.0F, 0.9D, 1.2D,
-                (LivingEntity e) -> !e.isSpectator()));
-        this.goalSelector.addGoal(3, new WaterAvoidingRandomStrollGoal(this, 0.5D));
-        this.goalSelector.addGoal(4, new LookAtPlayerGoal(this, Player.class, 8.0F));
-        this.goalSelector.addGoal(5, new RandomLookAroundGoal(this));
+        switch (variant) {
+            case DIAMOND -> {
+                // El de diamante no huye: ataca al jugador que se le acerca.
+                if (Config.DIAMOND_ATTACKS.get()) {
+                    this.goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.1D, true));
+                    this.targetSelector.addGoal(1, new NearestAttackableTargetGoal<>(this, Player.class, true));
+                }
+            }
+            case EMERALD -> {
+                // El de esmeralda es amigable: te sigue si llevas una esmeralda y se queda cerca de los aldeanos.
+                this.goalSelector.addGoal(2, new TemptGoal(this, 1.0D, Ingredient.of(Items.EMERALD), false));
+                this.goalSelector.addGoal(3, new FollowVillagerGoal());
+            }
+            default -> this.goalSelector.addGoal(1, new AvoidEntityGoal<>(this, Player.class, 16.0F, 0.9D, 1.2D,
+                    (LivingEntity e) -> !e.isSpectator() && !isSummoned()));
+        }
+        // Solo cuando es un cangrejo invocado: el de hierro pelea cuerpo a cuerpo, carbon y cobre disparan de lejos.
+        this.goalSelector.addGoal(2, new MeleeAttackGoal(this, 1.1D, true) {
+            @Override
+            public boolean canUse() {
+                return isSummoned() && variant == GrottolVariant.IRON && super.canUse();
+            }
+
+            @Override
+            public boolean canContinueToUse() {
+                return isSummoned() && super.canContinueToUse();
+            }
+        });
+        this.goalSelector.addGoal(2, new SummonedRangeGoal());
+        this.goalSelector.addGoal(4, new WaterAvoidingRandomStrollGoal(this, 0.5D));
+        this.goalSelector.addGoal(5, new LookAtPlayerGoal(this, Player.class, 8.0F));
+        this.goalSelector.addGoal(6, new RandomLookAroundGoal(this));
+    }
+
+    /** Cangrejo invocado de carbon o cobre: se acerca al objetivo hasta quedar a tiro. */
+    private class SummonedRangeGoal extends Goal {
+        SummonedRangeGoal() {
+            setFlags(EnumSet.of(Flag.MOVE));
+        }
+
+        private boolean valid() {
+            LivingEntity target = getTarget();
+            return isSummoned() && (variant == GrottolVariant.COAL || variant == GrottolVariant.COPPER)
+                    && target != null && target.isAlive();
+        }
+
+        @Override
+        public boolean canUse() {
+            return valid() && distanceToSqr(getTarget()) > 7.0D * 7.0D;
+        }
+
+        @Override
+        public boolean canContinueToUse() {
+            return valid() && distanceToSqr(getTarget()) > 5.0D * 5.0D && !getNavigation().isDone();
+        }
+
+        @Override
+        public void start() {
+            getNavigation().moveTo(getTarget(), 1.1D);
+        }
+
+        @Override
+        public void stop() {
+            getNavigation().stop();
+        }
+    }
+
+    /** Camina hacia el aldeano mas cercano (hasta 24 bloques) y se queda a su lado. */
+    private class FollowVillagerGoal extends Goal {
+        private Villager target;
+
+        FollowVillagerGoal() {
+            setFlags(EnumSet.of(Flag.MOVE));
+        }
+
+        @Override
+        public boolean canUse() {
+            if (random.nextInt(10) != 0) {
+                return false;
+            }
+            List<Villager> villagers = level().getEntitiesOfClass(Villager.class, getBoundingBox().inflate(24.0D), Villager::isAlive);
+            target = null;
+            double best = Double.MAX_VALUE;
+            for (Villager v : villagers) {
+                double d = distanceToSqr(v);
+                if (d < best) {
+                    best = d;
+                    target = v;
+                }
+            }
+            return target != null && best > 4.0D * 4.0D;
+        }
+
+        @Override
+        public boolean canContinueToUse() {
+            return target != null && target.isAlive() && !getNavigation().isDone() && distanceToSqr(target) > 3.0D * 3.0D;
+        }
+
+        @Override
+        public void start() {
+            if (target != null) {
+                getNavigation().moveTo(target, 0.9D);
+            }
+        }
+
+        @Override
+        public void stop() {
+            target = null;
+            getNavigation().stop();
+        }
     }
 
     @Override
@@ -178,6 +326,16 @@ public class GrottolVariantEntity extends PathfinderMob {
             return super.hurt(source, amount);
         }
 
+        // Los cangrejos invocados reciben dano normal de cualquier arma o mob (no solo del pico).
+        if (isSummoned()) {
+            return super.hurt(source, amount);
+        }
+
+        // Logro "Karma": le pegaste a un cangrejo de diamante
+        if (variant == GrottolVariant.DIAMOND && source.getEntity() instanceof ServerPlayer hitter) {
+            Achievements.grant(hitter, "karma");
+        }
+
         Entity direct = source.getDirectEntity();
         if (direct instanceof LivingEntity melee && !source.is(DamageTypeTags.IS_PROJECTILE) && !source.is(DamageTypeTags.IS_EXPLOSION)) {
             reactToMelee(melee);
@@ -188,6 +346,9 @@ public class GrottolVariantEntity extends PathfinderMob {
             if (!holdsPickaxe(player)) {
                 playSound(SoundEvents.CHAIN_HIT, 0.5F, 1.8F);
                 return false;
+            }
+            if (variant == GrottolVariant.IRON) {
+                CrabGameEvents.markIronHit(player);
             }
             if (tickCount - lastPickaxeHitTick < 8) {
                 return false;
@@ -221,6 +382,7 @@ public class GrottolVariantEntity extends PathfinderMob {
             case AMETHYST -> {
                 attacker.hurt(damageSources().thorns(this), 3.0F);
                 playSound(SoundEvents.AMETHYST_BLOCK_CHIME, 1.0F, 1.0F);
+                Achievements.grant(attacker, "violencia_violeta");
             }
             case GOLD -> {
                 attacker.addEffect(new MobEffectInstance(MobEffects.BLINDNESS, 100, 0));
@@ -228,9 +390,77 @@ public class GrottolVariantEntity extends PathfinderMob {
                     serverLevel.sendParticles(ParticleTypes.FLASH, getX(), getY() + 0.8D, getZ(), 1, 0.0D, 0.0D, 0.0D, 0.0D);
                 }
                 playSound(SoundEvents.AMETHYST_BLOCK_RESONATE, 1.0F, 1.6F);
+                Achievements.grant(attacker, "brillante");
+            }
+            case REDSTONE -> {
+                // Detectado: los monstruos cercanos te encuentran aunque haya paredes en el medio
+                attacker.addEffect(new MobEffectInstance(ModEffects.DETECTED.get(), Config.DETECTED_SECONDS.get() * 20, 0));
+                if (level() instanceof ServerLevel serverLevel) {
+                    serverLevel.sendParticles(ParticleTypes.ELECTRIC_SPARK, attacker.getX(), attacker.getEyeY(), attacker.getZ(), 16, 0.4D, 0.4D, 0.4D, 0.1D);
+                }
+                playSound(SoundEvents.AMETHYST_BLOCK_RESONATE, 1.0F, 0.5F);
+                Achievements.grant(attacker, "todos_te_vemos");
             }
             default -> {
             }
+        }
+    }
+
+    /** Pasivas y logros al morir: diamante da Desafortunado, lapis y carbon dan logros. */
+    @Override
+    public void die(DamageSource source) {
+        if (!level().isClientSide && source.getEntity() instanceof ServerPlayer killer) {
+            switch (variant) {
+                case DIAMOND -> {
+                    killer.addEffect(new MobEffectInstance(ModEffects.UNLUCKY.get(), Config.UNLUCKY_SECONDS.get() * 20, 0));
+                    playSound(SoundEvents.AMETHYST_CLUSTER_BREAK, 1.0F, 0.5F);
+                }
+                case LAPIS -> Achievements.grant(killer, "mucho_azul");
+                case COAL -> {
+                    if (shotsFired > 0 && !shotPlayers.contains(killer.getUUID())) {
+                        Achievements.grant(killer, "que_arde");
+                    }
+                }
+                default -> {
+                }
+            }
+        }
+        super.die(source);
+    }
+
+    /** Cangrejo de carbon: un disparo suyo le pego a este jugador. */
+    public void onShotHit(ServerPlayer player) {
+        shotPlayers.add(player.getUUID());
+    }
+
+    /** Cangrejo de esmeralda: le hizo descuento a este aldeano. A los 15 distintos, logro Ayuda comercial. */
+    public void recordDiscount(Villager villager, ServerPlayer player, int percent) {
+        discounted.add(villager.getUUID());
+        player.displayClientMessage(Component.translatable("message.mutantraisedead.emerald_discount", percent), true);
+        if (level() instanceof ServerLevel serverLevel) {
+            serverLevel.sendParticles(ParticleTypes.HAPPY_VILLAGER, getX(), getY() + 1.0D, getZ(), 6, 0.4D, 0.3D, 0.4D, 0.0D);
+        }
+        if (discounted.size() >= 15) {
+            Achievements.grant(player, "ayuda_comercial");
+        }
+    }
+
+    @Override
+    public void addAdditionalSaveData(CompoundTag tag) {
+        super.addAdditionalSaveData(tag);
+        ListTag list = new ListTag();
+        for (UUID id : discounted) {
+            list.add(NbtUtils.createUUID(id));
+        }
+        tag.put("DiscountedVillagers", list);
+    }
+
+    @Override
+    public void readAdditionalSaveData(CompoundTag tag) {
+        super.readAdditionalSaveData(tag);
+        discounted.clear();
+        for (Tag entry : tag.getList("DiscountedVillagers", Tag.TAG_INT_ARRAY)) {
+            discounted.add(NbtUtils.loadUUID(entry));
         }
     }
 
@@ -269,6 +499,10 @@ public class GrottolVariantEntity extends PathfinderMob {
         if (!(level() instanceof ServerLevel serverLevel)) {
             return;
         }
+        if (isSummoned()) {
+            tickSummoned(serverLevel);
+            return;
+        }
 
         // Enterrandose: desaparece despues de un ratito
         if (burrowTicks >= 0) {
@@ -288,16 +522,18 @@ public class GrottolVariantEntity extends PathfinderMob {
         }
 
         Player nearest = level().getNearestPlayer(this, 16.0D);
-        if (nearest != null && !nearest.isSpectator() && distanceToSqr(nearest) < 10.0D * 10.0D) {
-            fleeTicks++;
-        } else {
-            fleeTicks = Math.max(0, fleeTicks - 2);
-        }
-        if (fleeTicks >= 60 && onGround() && isDiggable(level().getBlockState(blockPosition().below()))) {
-            burrowTicks = 0;
-            level().broadcastEntityEvent(this, (byte) 71);
-            fleeTicks = 0;
-            return;
+        if (variant.burrows) {
+            if (nearest != null && !nearest.isSpectator() && distanceToSqr(nearest) < 10.0D * 10.0D) {
+                fleeTicks++;
+            } else {
+                fleeTicks = Math.max(0, fleeTicks - 2);
+            }
+            if (fleeTicks >= 60 && onGround() && isDiggable(level().getBlockState(blockPosition().below()))) {
+                burrowTicks = 0;
+                level().broadcastEntityEvent(this, (byte) 71);
+                fleeTicks = 0;
+                return;
+            }
         }
 
         tickAbilities(serverLevel, nearest);
@@ -345,6 +581,7 @@ public class GrottolVariantEntity extends PathfinderMob {
                     SmallFireball fireball = new SmallFireball(level, this, dir.x, dir.y, dir.z);
                     fireball.setPos(getX(), getY() + 0.8D, getZ());
                     level.addFreshEntity(fireball);
+                    shotsFired++;
                     level.playSound(null, getX(), getY(), getZ(), SoundEvents.BLAZE_SHOOT, SoundSource.HOSTILE, 1.0F, 1.0F);
                     abilityCooldown = 50;
                     level.broadcastEntityEvent(this, (byte) 70);
@@ -372,6 +609,69 @@ public class GrottolVariantEntity extends PathfinderMob {
         }
     }
 
+    /** Habilidades del cangrejo invocado: apuntan al objetivo que le asigna GuardHandler (monstruos hostiles). */
+    private void tickSummoned(ServerLevel level) {
+        if (abilityCooldown > 0) {
+            abilityCooldown--;
+        }
+        if (pendingTicks >= 0) {
+            pendingTicks--;
+            if (variant == GrottolVariant.COPPER) {
+                level.sendParticles(ParticleTypes.ELECTRIC_SPARK, pendingPos.x, pendingPos.y + 1.0D, pendingPos.z, 4, 0.6D, 1.0D, 0.6D, 0.1D);
+            }
+            if (pendingTicks < 0) {
+                fireSummonedBolt(level);
+            }
+            return;
+        }
+        LivingEntity target = getTarget();
+        if (target == null || !target.isAlive() || abilityCooldown > 0 || !hasLineOfSight(target)) {
+            return;
+        }
+        double distance = distanceTo(target);
+        switch (variant) {
+            case COAL -> {
+                if (distance <= 12.0D) {
+                    Vec3 dir = target.getEyePosition().subtract(position().add(0.0D, 0.8D, 0.0D));
+                    SmallFireball fireball = new SmallFireball(level, this, dir.x, dir.y, dir.z);
+                    fireball.setPos(getX(), getY() + 0.8D, getZ());
+                    level.addFreshEntity(fireball);
+                    level.playSound(null, getX(), getY(), getZ(), SoundEvents.BLAZE_SHOOT, SoundSource.NEUTRAL, 1.0F, 1.0F);
+                    abilityCooldown = 40;
+                    level.broadcastEntityEvent(this, (byte) 70);
+                }
+            }
+            case COPPER -> {
+                if (distance <= 16.0D) {
+                    pendingPos = target.position();
+                    pendingTicks = 20;
+                    abilityCooldown = 100;
+                    level.broadcastEntityEvent(this, (byte) 70);
+                    playSound(SoundEvents.LIGHTNING_BOLT_IMPACT, 0.3F, 2.0F);
+                }
+            }
+            default -> {
+            }
+        }
+    }
+
+    /** Rayo del cangrejo de cobre invocado: solo lastima a monstruos hostiles (el rayo es solo visual). */
+    private void fireSummonedBolt(ServerLevel level) {
+        LightningBolt bolt = EntityType.LIGHTNING_BOLT.create(level);
+        if (bolt != null) {
+            bolt.moveTo(pendingPos.x, pendingPos.y, pendingPos.z);
+            bolt.setVisualOnly(true);
+            level.addFreshEntity(bolt);
+        }
+        AABB area = new AABB(pendingPos.x - 2.5D, pendingPos.y - 1.0D, pendingPos.z - 2.5D,
+                pendingPos.x + 2.5D, pendingPos.y + 3.0D, pendingPos.z + 2.5D);
+        List<LivingEntity> victims = level.getEntitiesOfClass(LivingEntity.class, area,
+                e -> e instanceof Enemy && e.isAlive() && !GuardHandler.isAllied(e));
+        for (LivingEntity victim : victims) {
+            victim.hurt(damageSources().mobAttack(this), 12.0F);
+        }
+    }
+
     private void fireAbility(ServerLevel level) {
         if (variant == GrottolVariant.LAPIS) {
             // Las rocas se levantan del suelo en el lugar marcado
@@ -390,6 +690,7 @@ public class GrottolVariantEntity extends PathfinderMob {
             LightningBolt bolt = EntityType.LIGHTNING_BOLT.create(level);
             if (bolt != null) {
                 bolt.moveTo(pendingPos.x, pendingPos.y, pendingPos.z);
+                bolt.getPersistentData().putBoolean(CrabGameEvents.BOLT_TAG, true);
                 level.addFreshEntity(bolt);
             }
         }
@@ -417,6 +718,9 @@ public class GrottolVariantEntity extends PathfinderMob {
             case AMETHYST, LAPIS -> level().addParticle(ParticleTypes.END_ROD, x, y, z, 0.0D, 0.0D, 0.0D);
             case COPPER -> level().addParticle(ParticleTypes.ELECTRIC_SPARK, x, y, z, 0.0D, 0.0D, 0.0D);
             case COAL -> level().addParticle(ParticleTypes.SMOKE, x, y, z, 0.0D, 0.02D, 0.0D);
+            case REDSTONE -> level().addParticle(net.minecraft.core.particles.DustParticleOptions.REDSTONE, x, y, z, 0.0D, 0.0D, 0.0D);
+            case EMERALD -> level().addParticle(ParticleTypes.HAPPY_VILLAGER, x, y, z, 0.0D, 0.0D, 0.0D);
+            case DIAMOND -> level().addParticle(ParticleTypes.END_ROD, x, y, z, 0.0D, 0.0D, 0.0D);
             default -> {
             }
         }

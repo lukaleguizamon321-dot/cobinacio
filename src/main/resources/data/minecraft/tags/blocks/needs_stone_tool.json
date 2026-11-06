@@ -1,1 +1,15 @@
-{"replace": false, "values": ["mutantraisedead:iron_crab_nest", "mutantraisedead:deepslate_iron_crab_nest"]}
+{
+  "replace": false,
+  "values": [
+    "mutantraisedead:iron_crab_nest",
+    "mutantraisedead:deepslate_iron_crab_nest",
+    "mutantraisedead:coal_crab_nest",
+    "mutantraisedead:copper_crab_nest",
+    "mutantraisedead:gold_crab_nest",
+    "mutantraisedead:lapis_crab_nest",
+    "mutantraisedead:amethyst_crab_nest",
+    "mutantraisedead:redstone_crab_nest",
+    "mutantraisedead:diamond_crab_nest",
+    "mutantraisedead:emerald_crab_nest"
+  ]
+}

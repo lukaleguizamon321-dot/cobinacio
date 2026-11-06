@@ -9,11 +9,15 @@ import io.redspace.ironsspellbooks.api.spells.SchoolType;
 import io.redspace.ironsspellbooks.damage.ISSDamageTypes;
 import io.redspace.ironsspellbooks.registries.ItemRegistry;
 import io.redspace.ironsspellbooks.registries.SoundRegistry;
+import com.mutantraisedead.crab.GrottolVariant;
 import io.redspace.ironsspellbooks.util.ModTags;
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
 import net.minecraft.resources.ResourceLocation;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.tags.TagKey;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.CreativeModeTab;
 import net.minecraft.world.item.ItemStack;
 import net.minecraftforge.eventbus.api.IEventBus;
@@ -30,6 +34,12 @@ public final class ModRegistry {
 
     public static final ResourceLocation SCHOOL_ID_PLANTS =
             ResourceLocation.fromNamespaceAndPath(MutantRaiseDead.MODID, "enraizar_plantas");
+
+    /** Escuela de Invocar Cangrejo: el foco es la esmeralda (se usa en la mesa de inscripcion de pergaminos). */
+    public static final ResourceLocation SCHOOL_ID_CRABS =
+            ResourceLocation.fromNamespaceAndPath(MutantRaiseDead.MODID, "invocar_cangrejo");
+    public static final TagKey<Item> CRAB_FOCUS =
+            ItemTags.create(ResourceLocation.fromNamespaceAndPath(MutantRaiseDead.MODID, "cangrejo_focus"));
 
     private static final DeferredRegister<SchoolType> SCHOOLS =
             DeferredRegister.create(SchoolRegistry.SCHOOL_REGISTRY_KEY, MutantRaiseDead.MODID);
@@ -62,6 +72,18 @@ public final class ModRegistry {
             false,
             false));
 
+    /** Poder, resistencia y sonido de evocacion, pero con su propio pergamino y su propio foco (esmeralda). */
+    public static final RegistryObject<SchoolType> SCHOOL_CRABS = SCHOOLS.register("invocar_cangrejo", () -> new SchoolType(
+            SCHOOL_ID_CRABS,
+            CRAB_FOCUS,
+            Component.translatable("school.mutantraisedead.invocar_cangrejo").withStyle(ChatFormatting.GOLD),
+            AttributeRegistry.EVOCATION_SPELL_POWER,
+            AttributeRegistry.EVOCATION_MAGIC_RESIST,
+            SoundRegistry.EVOCATION_CAST,
+            ISSDamageTypes.EVOCATION_MAGIC,
+            false,
+            false));
+
     public static final RegistryObject<AbstractSpell> REVIVE_X =
             SPELLS.register("revive_mutantes_x", () -> new ReviveMutantesSpell(1, "revive_mutantes_x"));
     public static final RegistryObject<AbstractSpell> REVIVE_Y =
@@ -78,6 +100,23 @@ public final class ModRegistry {
     public static final RegistryObject<AbstractSpell> PLANTS_4 =
             SPELLS.register("enraizar_plantas_4", () -> new EnraizarPlantasSpell(4, "enraizar_plantas_4"));
 
+    public static final RegistryObject<AbstractSpell> CRAB_COAL =
+            SPELLS.register("invocar_cangrejo_carbon", () -> new InvocarCangrejoSpell(GrottolVariant.COAL, "invocar_cangrejo_carbon", true));
+    public static final RegistryObject<AbstractSpell> CRAB_COPPER =
+            SPELLS.register("invocar_cangrejo_cobre", () -> new InvocarCangrejoSpell(GrottolVariant.COPPER, "invocar_cangrejo_cobre", false));
+    public static final RegistryObject<AbstractSpell> CRAB_IRON =
+            SPELLS.register("invocar_cangrejo_hierro", () -> new InvocarCangrejoSpell(GrottolVariant.IRON, "invocar_cangrejo_hierro", false));
+
+    public static final RegistryObject<AbstractSpell> CREEPER_MUTANT =
+            SPELLS.register("cabeza_creeper_mutante", CabezaCreeperMutanteSpell::new);
+
+    public static final RegistryObject<AbstractSpell> BLAZE =
+            SPELLS.register("invocar_blaze", () -> new InvocarBlazeSpell(0, "invocar_blaze"));
+    public static final RegistryObject<AbstractSpell> BLAZE_X =
+            SPELLS.register("invocar_blaze_x", () -> new InvocarBlazeSpell(1, "invocar_blaze_x"));
+    public static final RegistryObject<AbstractSpell> BLAZE_Y =
+            SPELLS.register("invocar_blaze_y", () -> new InvocarBlazeSpell(2, "invocar_blaze_y"));
+
     public static final RegistryObject<CreativeModeTab> TAB = TABS.register("revive_mutantes", () ->
             CreativeModeTab.builder()
                     .title(Component.translatable("itemGroup.mutantraisedead"))
@@ -89,12 +128,24 @@ public final class ModRegistry {
                         for (int t = 1; t <= 4; t++) {
                             output.accept(createPlantScroll(t, 10));
                         }
+                        for (GrottolVariant crab : new GrottolVariant[]{GrottolVariant.COAL, GrottolVariant.COPPER, GrottolVariant.IRON}) {
+                            output.accept(createCrabScroll(crab, 1));
+                            output.accept(createCrabScroll(crab, InvocarCangrejoSpell.MAX_LEVEL));
+                        }
+                        output.accept(createCreeperScroll());
+                        output.accept(createBlazeScroll(0, 1));
+                        output.accept(createBlazeScroll(0, 2));
+                        output.accept(createBlazeScroll(1, 2));
+                        output.accept(createBlazeScroll(2, 2));
                         for (var egg : com.mutantraisedead.crab.ModEntities.EGGS.values()) {
                             output.accept(egg.get());
                         }
                         output.accept(com.mutantraisedead.crab.ModEntities.GIANT_CRAB_EGG.get());
                         output.accept(com.mutantraisedead.crab.ModBlocks.NEST_ITEM.get());
                         output.accept(com.mutantraisedead.crab.ModBlocks.DEEPSLATE_NEST_ITEM.get());
+                        for (var nest : com.mutantraisedead.crab.ModBlocks.LAIR_NEST_ITEMS.values()) {
+                            output.accept(nest.get());
+                        }
                     })
                     .build());
 
@@ -150,6 +201,64 @@ public final class ModRegistry {
             return 0;
         }
         return tierOfSpell(container.getSpellAtIndex(0).getSpell());
+    }
+
+    // ------------------------------------------------------------------
+    // Invocar Cangrejo, Cabeza de Creeper Mutante, Invocar Blaze
+    // ------------------------------------------------------------------
+
+    public static AbstractSpell crabSpell(GrottolVariant variant) {
+        return switch (variant) {
+            case COPPER -> CRAB_COPPER.get();
+            case IRON -> CRAB_IRON.get();
+            default -> CRAB_COAL.get();
+        };
+    }
+
+    /** CARBON, COBRE o HIERRO si es uno de nuestros hechizos de cangrejo; null si no. */
+    public static GrottolVariant crabVariantOfSpell(AbstractSpell spell) {
+        if (spell == null) {
+            return null;
+        }
+        if (spell == CRAB_COAL.get()) {
+            return GrottolVariant.COAL;
+        }
+        if (spell == CRAB_COPPER.get()) {
+            return GrottolVariant.COPPER;
+        }
+        if (spell == CRAB_IRON.get()) {
+            return GrottolVariant.IRON;
+        }
+        return null;
+    }
+
+    public static ItemStack createCrabScroll(GrottolVariant variant, int level) {
+        ItemStack stack = new ItemStack(ItemRegistry.SCROLL.get());
+        ISpellContainer.createScrollContainer(crabSpell(variant), level, stack);
+        return stack;
+    }
+
+    public static ItemStack createCreeperScroll() {
+        ItemStack stack = new ItemStack(ItemRegistry.SCROLL.get());
+        ISpellContainer.createScrollContainer(CREEPER_MUTANT.get(), 1, stack);
+        return stack;
+    }
+
+    /** tier 0 = Invocar Blaze, 1 = mutante (X), 2 = mutante (Y). */
+    public static ItemStack createBlazeScroll(int tier, int level) {
+        ItemStack stack = new ItemStack(ItemRegistry.SCROLL.get());
+        AbstractSpell spell = switch (tier) {
+            case 1 -> BLAZE_X.get();
+            case 2 -> BLAZE_Y.get();
+            default -> BLAZE.get();
+        };
+        ISpellContainer.createScrollContainer(spell, level, stack);
+        return stack;
+    }
+
+    /** Los hechizos con mutantes: hay que juntar todos para el logro "Esta vaina es seria bro". */
+    public static java.util.List<RegistryObject<AbstractSpell>> mutantSpells() {
+        return java.util.List.of(REVIVE_X, REVIVE_Y, REVIVE_Z, CREEPER_MUTANT, BLAZE_X, BLAZE_Y);
     }
 
     // ------------------------------------------------------------------

@@ -23,6 +23,7 @@ public class MutantRaiseDead {
         com.mutantraisedead.crab.ModEntities.register(modBus);
         com.mutantraisedead.crab.ModBlocks.register(modBus);
         com.mutantraisedead.crab.ModEffects.register(modBus);
+        com.mutantraisedead.crab.ModLoot.register(modBus);
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, Config.SPEC);
     }
 }

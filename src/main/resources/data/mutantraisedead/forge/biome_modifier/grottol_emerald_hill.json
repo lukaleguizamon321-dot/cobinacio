@@ -1,0 +1,10 @@
+{
+  "type": "forge:add_spawns",
+  "biomes": "#minecraft:is_hill",
+  "spawners": {
+    "type": "mutantraisedead:grottol_emerald",
+    "weight": 3,
+    "minCount": 1,
+    "maxCount": 1
+  }
+}

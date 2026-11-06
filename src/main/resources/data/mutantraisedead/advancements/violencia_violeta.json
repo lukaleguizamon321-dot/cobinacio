@@ -1,0 +1,26 @@
+{
+  "parent": "mutantraisedead:root",
+  "display": {
+    "icon": {
+      "item": "minecraft:amethyst_shard"
+    },
+    "title": {
+      "translate": "advancements.mutantraisedead.violencia_violeta.title"
+    },
+    "description": {
+      "translate": "advancements.mutantraisedead.violencia_violeta.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "trigger": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "rewards": {
+    "experience": 10
+  }
+}

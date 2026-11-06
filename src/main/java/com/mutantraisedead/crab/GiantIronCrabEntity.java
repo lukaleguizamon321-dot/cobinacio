@@ -196,6 +196,7 @@ public class GiantIronCrabEntity extends PathfinderMob {
                 playSound(SoundEvents.CHAIN_HIT, 0.7F, 1.2F);
                 return false;
             }
+            CrabGameEvents.markIronHit(player);
             if (tickCount - lastPickaxeHitTick < 8) {
                 return false;
             }

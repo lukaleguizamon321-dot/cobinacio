@@ -12,6 +12,10 @@ public final class ModEffects {
             DeferredRegister.create(ForgeRegistries.MOB_EFFECTS, MutantRaiseDead.MODID);
 
     public static final RegistryObject<MobEffect> DIZZY = EFFECTS.register("dizzy", DizzyEffect::new);
+    /** "Detectado": los monstruos cercanos te encuentran aunque haya paredes en el medio. */
+    public static final RegistryObject<MobEffect> DETECTED = EFFECTS.register("detected", DetectedEffect::new);
+    /** "Desafortunado": Fortuna al reves; las menas sueltan menos y la suerte baja. */
+    public static final RegistryObject<MobEffect> UNLUCKY = EFFECTS.register("unlucky", UnluckyEffect::new);
 
     private ModEffects() {
     }

@@ -1,4 +1,4 @@
-# Cobinatio v1.4.0 (Forge 1.20.1)
+# Cobinatio v1.9.0 (Forge 1.20.1)
 
 Combina hechizos de Iron's Spells 'n Spellbooks con mobs de otros mods.
 
@@ -33,7 +33,7 @@ Si hacés clic derecho con un pergamino de Revive Mutantes sobre un **caldero al
 
 ## Si venís de una versión anterior
 
-Borrá el `.jar` viejo de la carpeta `mods` (ahora se llama `Cobinatio-1.4.0.jar`). Los libros marcados con la versión 1.0.0 ya no funcionan: hay que hacer el pergamino de nuevo con el yunque.
+Borrá el `.jar` viejo de la carpeta `mods` (ahora se llama `Cobinatio-1.8.0.jar`). Los libros marcados con la versión 1.0.0 ya no funcionan: hay que hacer el pergamino de nuevo con el yunque.
 
 ## Enraizar Plantas (1 a 4) — necesita Mowzie's Mobs
 
@@ -62,7 +62,7 @@ Variantes del cangrejo de diamante (Grottol) de Mowzie's Mobs. Son mobs propios 
 - Los metales (hierro, oro, cobre) tienen el modelo liso y se animan suave; los cristales (lapislázuli, amatista) son puntiagudos y se animan a saltos; el carbón son trozos irregulares que tiemblan.
 - Fortuna en el pico da más botín.
 - Los ataques a distancia se pueden apagar en `config/mutantraisedead-common.toml` (`abilitiesEnabled`).
-- Faltan (a propósito, por ahora): esmeralda, cuarzo, escombros antiguos, oro del Nether, etc.
+- Los de redstone, diamante y esmeralda (v1.7) están más abajo. Faltan (a propósito, por ahora): los del Nether (cuarzo, escombros antiguos, oro del Nether, etc.).
 
 ## Cangrejo Gigante de Hierro (2x2)
 
@@ -96,3 +96,69 @@ En un servidor va en el servidor **y** en la carpeta mods de cada jugador.
 - El cangrejo gigante de hierro usa `cangrejo_gigante.bbmodel` (geometria en `CrabMeshData.GIANT`): caparazon de 2x2 de mineral, patas con mineral al frente y tenazas de bloque de hierro en bruto.
 - Mantiene lo de antes: sale del suelo (se hunde y emerge), las tenazas golpean al atacar, 20 golpes de pico.
 - Textura: `textures/entity/giant_iron_crab.png` (256x128, junta todas las texturas del modelo).
+
+## v1.7 - Cangrejos de redstone, diamante y esmeralda + efectos + logros
+
+Los tres usan el modelo de cristal con la textura de su bloque. **No se entierran** (los 6 anteriores siguen enterrándose).
+
+| Cangrejo | Qué hace | Suelta | Aparece |
+|---|---|---|---|
+| Redstone | Al golpearlo te da **Detectado** (5 min): los monstruos hasta 25 bloques te detectan aunque haya paredes en el medio | Redstone | Cuevas hasta Y 16 |
+| Diamante | **Ataca** al jugador. Si lo matás te da **Desafortunado** (3 min) | Diamante | Cuevas hasta Y 16 (muy raro) |
+| Esmeralda | Amigable: a los aldeanos que tenga a menos de 10 bloques les baja los precios hasta un 25 %. Te sigue si llevás una esmeralda en la mano y se queda cerca de los aldeanos | Esmeralda | Cuevas de montañas y colinas |
+
+- **Detectado**: no afecta a mobs neutrales (endermans, piglins zombificados...), a los mutantes tuyos ni a las plantas invocadas.
+- **Desafortunado** = Fortuna al revés: al picar una mena (sin toque de seda) cada item que suelta tiene un 50 % de perderse, y además baja la suerte (pesca, cofres).
+- Los valores (segundos, rango, porcentaje) se cambian en `config/mutantraisedead-common.toml`. Si preferís que el de diamante no ataque y solo dé Desafortunado al morir, poné `diamondCrabAttacks = false`.
+
+### Pestaña de logros "Cobinatio" (tecla L)
+- **Karma**: pegarle a un cangrejo de diamante.
+- **¡Uhh, brillante!**: recibir la ceguera del cangrejo de oro.
+- **Todos te vemos**: recibir Detectado del cangrejo de redstone.
+- **Tan duro como el acero**: que se te rompa un pico peleando contra un cangrejo de hierro (el normal o el gigante).
+- **Mago eléctrico nivel 15**: morir por un rayo del cangrejo de cobre.
+- **¡Qué arde!**: matar a un cangrejo de carbón sin que ninguno de sus disparos te pegue.
+- **Ayuda comercial**: que un mismo cangrejo de esmeralda le haga descuento a 15 aldeanos distintos.
+- **Mucho azul**: matar a un cangrejo de lapislázuli.
+- **Violencia violeta** (invento mío): golpear a un cangrejo de amatista y comerte sus espinas.
+- **Esta vaina es seria bro** (v1.8): haber tenido todos los hechizos con mutantes (Revive Mutantes X, Y y Z, Cabeza de Creeper Mutante e Invocar Blaze Mutante X e Y). Cuenta lo que llevás en el inventario y en el libro de hechizos; lo que ya viste queda anotado, no hace falta tenerlos todos juntos.
+
+## v1.8 - Hechizos nuevos: Invocar Cangrejo, Cabeza de Creeper Mutante, Invocar Blaze
+
+Todos funcionan como Revivir Muertos: lo que invocan **te protege**, dura 10 minutos, no suelta botín ni experiencia, y si volvés a lanzar el hechizo los despedís.
+
+### Invocar Cangrejo (carbón, cobre, hierro) — 5 niveles
+1. **Mesa de inscripción de pergaminos** (la de Iron's): **tinta común + papel + una esmeralda** = *Invocar Cangrejo de Carbón* nivel 1 (1 cangrejo). La esmeralda va en el espacio del foco, igual que con los hechizos de evocación.
+2. **Yunque arcano**: pergamino a la izquierda y tinta a la derecha, en orden: **poco común** = nivel 2 (2 cangrejos), **rara** = nivel 3 (3), **épica** = nivel 4 (4), **legendaria** = nivel 5 (4 cangrejos con 25 de vida en vez de 20).
+3. **Cambiar de material**: pergamino de carbón **nivel 5** + **bloque de cobre** en el yunque = *Invocar Cangrejo de Cobre* nivel 1 (se reinicia y vuelve a subir con la misma tinta). Pergamino de cobre nivel 5 + **bloque de hierro** = *Invocar Cangrejo de Hierro* nivel 1.
+- Qué hace cada uno: **carbón** dispara bolas de fuego, **cobre** lanza rayos (solo lastiman a monstruos hostiles, nunca a vos), **hierro** pelea cuerpo a cuerpo y tiene armadura.
+- Los cangrejos invocados **reciben daño normal** de cualquier arma o mob (no solo del pico) y ya no huyen ni se entierran.
+- Config: `requiredCrabLevel` (nivel necesario para cambiar de material, 5) y `crabLevel5Health` (25).
+
+### Cabeza de Creeper Mutante — 1 nivel
+- Pergamino de **Cabeza de Creeper** (Iron's) en nivel máximo (10) + **Química X** en el yunque arcano = *Cabeza de Creeper Mutante*. Invoca **un** Creeper Mutante (Mutant Monsters) que te protege.
+- Sus explosiones **no rompen bloques** ni te lastiman a vos ni a tus aliados.
+
+### Invocar Blaze (fuego) — 2 niveles
+1. **Mesa de inscripción** con el foco de fuego: **tinta épica** = nivel 1 (2 blazes). En el yunque arcano, **tinta legendaria** = nivel 2 (4 blazes).
+2. **Versiones mutantes**: pergamino de Invocar Blaze nivel 2 + **Química X** = *Invocar Blaze Mutante (X)* (25 % de cada blaze sale mutante). Con **Fórmula Y** = *(Y)* (50 %).
+3. Los blazes mutantes son el **Blaze Mutante de Mutant More**. **Máximo 2 mutantes** por lanzamiento: si en la tirada salen más, el juego elige cuáles quedan como blaze normal.
+- Si el id del Blaze Mutante de tu versión de Mutant More es otro, se cambia en el config (`blazeMutants`). Si el id no existe, salen blazes normales.
+- Config: `blazeChanceX`, `blazeChanceY`, `maxMutantBlazes`, `requiredBlazeLevel`, `requiredCreeperLevel`.
+
+Los pergaminos para probar están en la pestaña **Cobinatio** del creativo.
+
+## v1.9 - La guarida de los cangrejos
+
+Una estructura subterránea nueva, como las mazmorras: se genera sola, enterrada entre las alturas -50 y 30, en cualquier bioma del mundo normal (no aparece bajo agua ni lava, y es bastante rara).
+
+- **Zona central**: sala redonda (cilindro) de **radio 10 y 9 bloques de alto**, con piso en anillos y paredes de ladrillo de piedra (algunos con musgo o agrietados) si la guarida está por encima de Y=0; por debajo de Y=0 es de ladrillo de pizarra profunda y los faroles son de almas.
+- **Pedestal** en el medio de la sala. Por ahora no hace nada; queda reservado para lo que sigue (jefes y huevos).
+- **9 nidos pegados a la pared**, uno por cada cangrejo, en este orden: carbón, hierro, cobre, oro, lapislázuli, amatista, redstone, diamante y esmeralda. Son cubos de 2x2x2 que parecen mena de ese material. Entre nido y nido hay un **pilar con una linterna**.
+- **Puerta** de 3x4 en uno de los cuatro lados (norte, sur, este u oeste); de afuera hay que cavar o cruzar una cueva para llegar a ella.
+- **Los nidos**: al romper cualquiera de los bloques, todo el cubo desaparece y **despierta el cangrejo** de ese material. El de hierro despierta al **cangrejo gigante**; los otros, un cangrejo normal (el de diamante va directo a pelear). Los nidos se pueden conseguir en el creativo (pestaña Cobinatio): *Mena de X (nido de cangrejo)*; se rompen con pico de piedra o mejor y no sueltan nada.
+- **Probarla sin buscarla** (hace falta ser operador, nivel 2): escribí `/cobinatio guarida`. La construye alrededor de donde estás parado y te deja adentro, al lado del pedestal. Si lo hacés en la superficie, queda como un búnker a medio enterrar; para verla bien enterrada, usalo dentro de una cueva o cavando hacia abajo antes.
+- También sirve el comando de Minecraft `/place feature mutantraisedead:crab_lair` (ahí no se hacen las comprobaciones de la generación normal).
+
+Qué viene después (todavía NO está): un jefe por cada cangrejo que se pelea en la sala central, y huevos de cangrejo que crecen sobre su mena y dan un cangrejo aliado.
+

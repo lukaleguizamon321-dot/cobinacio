@@ -13,6 +13,7 @@ import net.minecraft.world.entity.TamableAnimal;
 import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.phys.AABB;
+import net.minecraftforge.event.level.ExplosionEvent;
 import net.minecraftforge.event.entity.living.LivingAttackEvent;
 import net.minecraftforge.event.entity.living.LivingChangeTargetEvent;
 import net.minecraftforge.event.entity.living.LivingDeathEvent;
@@ -76,6 +77,11 @@ public final class GuardHandler {
 
     private static boolean isGuard(Entity entity) {
         return entity.getTags().contains(MARKER_TAG);
+    }
+
+    /** true si es un guardian o una planta invocada por el jugador (para que otros efectos los dejen en paz). */
+    public static boolean isAllied(Entity entity) {
+        return isGuard(entity) || isPlant(entity);
     }
 
     private static UUID ownerOf(Entity guard) {
@@ -273,6 +279,15 @@ public final class GuardHandler {
                 20, 0.6D, 1.0D, 0.6D, 0.02D);
         SummonManager.removeSummon(mob);
         mob.discard();
+    }
+
+    /** Las explosiones de tus guardianes (por ejemplo el Creeper Mutante) no rompen bloques. */
+    @SubscribeEvent
+    public static void onExplosion(ExplosionEvent.Detonate event) {
+        Entity source = event.getExplosion().getDirectSourceEntity();
+        if (source != null && isAllied(source)) {
+            event.getAffectedBlocks().clear();
+        }
     }
 
     @SubscribeEvent

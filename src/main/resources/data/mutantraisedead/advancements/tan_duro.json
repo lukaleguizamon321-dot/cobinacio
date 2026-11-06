@@ -1,0 +1,26 @@
+{
+  "parent": "mutantraisedead:root",
+  "display": {
+    "icon": {
+      "item": "minecraft:iron_pickaxe"
+    },
+    "title": {
+      "translate": "advancements.mutantraisedead.tan_duro.title"
+    },
+    "description": {
+      "translate": "advancements.mutantraisedead.tan_duro.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "trigger": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "rewards": {
+    "experience": 20
+  }
+}

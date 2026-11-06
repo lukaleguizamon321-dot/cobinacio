@@ -19,12 +19,17 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Bloque "mena de hierro" que en realidad es un cangrejo gigante dormido (se generan de a 2x2x2).
- * Cerca de uno se escuchan rocas moviendose. Al romper cualquiera, los demas desaparecen y el cangrejo despierta.
+ * Bloque "mena" que en realidad es un cangrejo dormido (se generan de a 2x2x2).
+ * El de hierro despierta al cangrejo gigante; los de los otros materiales (de las guaridas) despiertan
+ * un cangrejo normal de ese material. Cerca de uno se escuchan rocas moviendose.
+ * Al romper cualquiera, los demas del mismo grupo desaparecen y el cangrejo despierta.
  */
 public class GrottolNestBlock extends Block {
-    public GrottolNestBlock(Properties properties) {
+    private final GrottolVariant variant;
+
+    public GrottolNestBlock(Properties properties, GrottolVariant variant) {
         super(properties);
+        this.variant = variant;
     }
 
     @Override
@@ -48,12 +53,13 @@ public class GrottolNestBlock extends Block {
         super.playerWillDestroy(level, pos, state, player);
     }
 
-    private static boolean isNest(BlockState state) {
-        return state.getBlock() instanceof GrottolNestBlock;
+    /** Solo cuentan los nidos del mismo cangrejo (el de hierro tiene version normal y de pizarra profunda). */
+    private boolean isSameNest(BlockState state) {
+        return state.getBlock() instanceof GrottolNestBlock other && other.variant == this.variant;
     }
 
-    /** Junta los bloques nido pegados, los borra y hace aparecer al cangrejo gigante. */
-    private static void awaken(ServerLevel level, BlockPos origin, Player player) {
+    /** Junta los bloques nido pegados, los borra y hace aparecer al cangrejo (gigante si es de hierro). */
+    private void awaken(ServerLevel level, BlockPos origin, Player player) {
         Set<BlockPos> group = new HashSet<>();
         ArrayDeque<BlockPos> queue = new ArrayDeque<>();
         group.add(origin);
@@ -64,7 +70,7 @@ public class GrottolNestBlock extends Block {
                 for (int dy = -1; dy <= 1; dy++) {
                     for (int dz = -1; dz <= 1; dz++) {
                         BlockPos next = current.offset(dx, dy, dz);
-                        if (!group.contains(next) && isNest(level.getBlockState(next))) {
+                        if (!group.contains(next) && isSameNest(level.getBlockState(next))) {
                             group.add(next);
                             queue.add(next);
                         }
@@ -91,6 +97,11 @@ public class GrottolNestBlock extends Block {
             }
         }
 
+        if (variant != GrottolVariant.IRON) {
+            awakenNormalCrab(level, player, (minX + maxX + 1) / 2.0D, minY, (minZ + maxZ + 1) / 2.0D);
+            return;
+        }
+
         GiantIronCrabEntity crab = ModEntities.GIANT_CRAB.get().create(level);
         if (crab == null) {
             return;
@@ -100,5 +111,21 @@ public class GrottolNestBlock extends Block {
         crab.setTarget(player);
         level.addFreshEntity(crab);
         level.playSound(null, crab.getX(), crab.getY(), crab.getZ(), SoundEvents.DEEPSLATE_BREAK, SoundSource.HOSTILE, 2.0F, 0.5F);
+    }
+
+    /** Nidos de las guaridas: sale un cangrejo normal del material (el de diamante va directo a pelear). */
+    private void awakenNormalCrab(ServerLevel level, Player player, double x, double y, double z) {
+        GrottolVariantEntity crab = ModEntities.CRABS.get(variant).get().create(level);
+        if (crab == null) {
+            return;
+        }
+        crab.moveTo(x, y, z, level.getRandom().nextFloat() * 360.0F, 0.0F);
+        crab.finalizeSpawn(level, level.getCurrentDifficultyAt(crab.blockPosition()), MobSpawnType.EVENT, null, null);
+        crab.setPersistenceRequired();
+        if (variant == GrottolVariant.DIAMOND) {
+            crab.setTarget(player);
+        }
+        level.addFreshEntity(crab);
+        level.playSound(null, x, y, z, SoundEvents.STONE_BREAK, SoundSource.HOSTILE, 1.5F, 0.5F);
     }
 }

@@ -1,5 +1,6 @@
 package com.mutantraisedead;
 
+import com.mutantraisedead.crab.GrottolVariant;
 import io.redspace.ironsspellbooks.api.registry.SpellRegistry;
 import io.redspace.ironsspellbooks.api.spells.ISpellContainer;
 import io.redspace.ironsspellbooks.api.spells.SpellData;
@@ -13,6 +14,7 @@ import net.minecraft.world.inventory.AbstractContainerMenu;
 import net.minecraft.world.inventory.ResultContainer;
 import net.minecraft.world.inventory.Slot;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
 import net.minecraftforge.event.TickEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
@@ -25,6 +27,11 @@ import java.util.List;
  * Receta del yunque arcano de Iron's:
  *   pergamino de Revivir Muertos (nivel maximo) + Quimica X / Formula Y / Compuesto Z
  *   = pergamino de Revive Mutantes (X) / (Y) / (Z) del mismo nivel.
+ *
+ *   pergamino de Cabeza de Creeper (nivel maximo) + Quimica X = Cabeza de Creeper Mutante.
+ *   pergamino de Invocar Blaze (nivel maximo) + Quimica X / Formula Y = Invocar Blaze Mutante (X) / (Y).
+ *   pergamino de Invocar Cangrejo (nivel 5) + bloque de cobre = version de cobre; + bloque de hierro = version de hierro.
+ *   (Subir de nivel con tinta, en el yunque arcano, lo hace Iron's solo: ver getRarity en los hechizos.)
  *
  *   pergamino de Enraizar (nivel maximo) + semilla de Foliaath (Mowzie's Mobs)
  *   = Enraizar Plantas (1); cada semilla mas lo sube un nivel, hasta 4.
@@ -79,12 +86,37 @@ public final class AnvilHandler {
             return;
         }
 
-        // Revivir Muertos + quimica -> Revive Mutantes (X / Y / Z)
+        // Quimicas: Revivir Muertos -> Revive Mutantes (X / Y / Z), Cabeza de Creeper -> mutante, Invocar Blaze -> mutante
         int tier = chemicalTier(modifier);
         if (tier > 0) {
-            if (data.getSpell() == SpellRegistry.RAISE_DEAD_SPELL.get()
-                    && data.getLevel() >= Config.REQUIRED_SPELL_LEVEL.get()) {
-                result.set(ModRegistry.createScroll(tier, data.getLevel()));
+            if (data.getSpell() == SpellRegistry.RAISE_DEAD_SPELL.get()) {
+                if (data.getLevel() >= Config.REQUIRED_SPELL_LEVEL.get()) {
+                    result.set(ModRegistry.createScroll(tier, data.getLevel()));
+                }
+            } else if (data.getSpell() == SpellRegistry.LOB_CREEPER_SPELL.get()) {
+                // Cabeza de Creeper + Quimica X (solo la X) = Cabeza de Creeper Mutante, un solo nivel
+                if (tier == 1 && data.getLevel() >= Config.REQUIRED_CREEPER_LEVEL.get()) {
+                    result.set(ModRegistry.createCreeperScroll());
+                }
+            } else if (data.getSpell() == ModRegistry.BLAZE.get()) {
+                // Invocar Blaze + Quimica X / Formula Y = Invocar Blaze Mutante (X) / (Y); el nivel se mantiene
+                if (tier <= 2 && data.getLevel() >= Config.REQUIRED_BLAZE_LEVEL.get()) {
+                    result.set(ModRegistry.createBlazeScroll(tier, data.getLevel()));
+                }
+            }
+            return;
+        }
+
+        // Invocar Cangrejo: con el nivel pedido, un bloque de cobre lo pasa a la version de cobre (nivel 1)
+        // y un bloque de hierro de la de cobre a la de hierro (nivel 1). La tinta sube los niveles (lo hace Iron's).
+        GrottolVariant crab = ModRegistry.crabVariantOfSpell(data.getSpell());
+        if (crab != null) {
+            if (data.getLevel() >= Config.REQUIRED_CRAB_LEVEL.get()) {
+                if (crab == GrottolVariant.COAL && modifier.is(Items.COPPER_BLOCK)) {
+                    result.set(ModRegistry.createCrabScroll(GrottolVariant.COPPER, 1));
+                } else if (crab == GrottolVariant.COPPER && modifier.is(Items.IRON_BLOCK)) {
+                    result.set(ModRegistry.createCrabScroll(GrottolVariant.IRON, 1));
+                }
             }
             return;
         }

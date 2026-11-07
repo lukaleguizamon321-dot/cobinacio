@@ -1,6 +1,8 @@
 {
   "replace": false,
   "entries": [
-    "mutantraisedead:unlucky_ores"
+    "mutantraisedead:unlucky_ores",
+    "mutantraisedead:doble_almacen_mimic",
+    "mutantraisedead:doble_almacen_chests"
   ]
 }

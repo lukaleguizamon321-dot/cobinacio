@@ -15,6 +15,8 @@ public final class ModLoot {
 
     public static final RegistryObject<Codec<? extends IGlobalLootModifier>> UNLUCKY_ORES =
             MODIFIERS.register("unlucky_ores", UnluckyLootModifier.CODEC);
+    public static final RegistryObject<Codec<? extends IGlobalLootModifier>> ADD_ITEM =
+            MODIFIERS.register("add_item", AddItemLootModifier.CODEC);
 
     private ModLoot() {
     }

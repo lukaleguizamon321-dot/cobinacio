@@ -1,0 +1,9 @@
+{
+  "type": "mutantraisedead:add_item",
+  "conditions": [],
+  "item": "mutantraisedead:doble_almacen",
+  "chance": 0.05,
+  "tables": [
+    "artifacts:entities/mimic"
+  ]
+}

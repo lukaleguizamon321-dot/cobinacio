@@ -35,6 +35,7 @@ public final class Config {
     public static final ForgeConfigSpec.DoubleValue BLAZE_CHANCE_Y;
     public static final ForgeConfigSpec.IntValue MAX_MUTANT_BLAZES;
     public static final ForgeConfigSpec.ConfigValue<List<? extends String>> BLAZE_MUTANTS;
+    public static final ForgeConfigSpec.BooleanValue DOUBLE_STORAGE_OVERFLOW;
 
     static {
         ForgeConfigSpec.Builder b = new ForgeConfigSpec.Builder();
@@ -92,6 +93,14 @@ public final class Config {
         BLAZE_MUTANTS = b
                 .comment("Mutantes que pueden reemplazar a un blaze invocado (Mutant More). Si el id no existe, sale un blaze normal.")
                 .defineListAllowEmpty("blazeMutants", List.of("mutantmore:mutant_blaze"), o -> o instanceof String);
+
+        b.pop();
+
+        b.push("doble_almacen");
+
+        DOUBLE_STORAGE_OVERFLOW = b
+                .comment("Doble Almacen: si es true, cuando tu inventario esta lleno lo que recojas del suelo se guarda solo en el amuleto.")
+                .define("overflowPickup", true);
 
         b.pop();
 

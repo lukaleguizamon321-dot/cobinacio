@@ -146,6 +146,7 @@ public final class ModRegistry {
                         for (var nest : com.mutantraisedead.crab.ModBlocks.LAIR_NEST_ITEMS.values()) {
                             output.accept(nest.get());
                         }
+                        output.accept(com.mutantraisedead.storage.ModStorage.DOUBLE_STORAGE.get());
                     })
                     .build());
 

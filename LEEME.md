@@ -1,4 +1,4 @@
-# Cobinatio v1.11.0 (Forge 1.20.1)
+# Cobinatio v1.11.1 (Forge 1.20.1)
 
 Combina hechizos de Iron's Spells 'n Spellbooks con mobs de otros mods.
 
@@ -179,6 +179,7 @@ Un amuleto nuevo para la ranura de **amuletos (charm) de Curios**, pensado para 
 - **Limitación conocida:** con shift+clic desde tu inventario las cosas se mueven entre la mochila y la barra rápida como siempre (no saltan solas al espacio extra); para llenarlo se arrastra, o se llena solo al recoger cosas con el inventario lleno.
 - **Textura:** por ahora usa la caja de shulker violeta como imagen provisoria. Cuando tengas tu textura, reemplazá el archivo `src/main/resources/assets/mutantraisedead/textures/item/doble_almacen.png` (16x16) y subilo.
 - Hace falta **Curios** (ya lo pide Iron's Spells). **Artifacts** es opcional: sin él, el amuleto igual funciona, pero no hay mímicos para conseguirlo.
+- **v1.11.1 - la ranura de amuletos viene con Cobinatio:** Curios por sí solo define el tipo de ranura "charm" (amuleto) pero no se la da al jugador; eso lo hacía otro mod. Ahora Cobinatio se la da al jugador por su cuenta (archivo `data/mutantraisedead/curios/entities/doble_almacen.json`), así que alcanza con tener **Curios** instalado. Curios muestra sus ranuras junto a la pantalla del inventario (como cuadritos a la izquierda o con un botón que abre su propia pantalla, según su configuración); ahí vas a ver la de amuleto.
 
 Qué viene después (todavía NO está): un jefe por cada cangrejo que se pelea en la sala central, y huevos de cangrejo que crecen sobre su mena y dan un cangrejo aliado.
 

@@ -1,4 +1,4 @@
-# Cobinatio v1.10.0 (Forge 1.20.1)
+# Cobinatio v1.11.0 (Forge 1.20.1)
 
 Combina hechizos de Iron's Spells 'n Spellbooks con mobs de otros mods.
 
@@ -167,17 +167,18 @@ Una estructura subterránea nueva, como las mazmorras: se genera sola, enterrada
 - Es solo visual: se ve igual en el inventario, en la mano y tirado en el suelo.
 - Si ves cuadrados violeta y negro en la pestaña Cobinatio o cangrejos violeta y negros, es que faltan archivos de imágenes en tu repo (la carpeta `src/main/resources/assets`). Se arregla subiendo esa parte de nuevo.
 
-## v1.10 - Doble Almacén (artefacto)
+## v1.11 - Doble Almacén (artefacto): el inventario crece
 
-Un amuleto nuevo para la ranura de **amuletos (charm) de Curios**, pensado para convivir con el mod **Artifacts**: es como sumarle un cofre a tu inventario (+27 espacios, un cofre normal).
+Un amuleto nuevo para la ranura de **amuletos (charm) de Curios**, pensado para convivir con el mod **Artifacts**. Mientras lo llevás puesto, **tu inventario se agranda como un cofre doble**: al apretar la tecla del inventario (E) aparecen **27 espacios más debajo** de tu inventario normal. No se abre ninguna ventana aparte (en la v1.10 era una ventana con la tecla B; esa tecla ya no existe).
 
-- **Abrirlo:** con el amuleto puesto, apretá la tecla **B** (se cambia en Opciones > Controles, categoría *Cobinatio*, "Abrir Doble Almacén"). Se abre una ventana de 3 filas como un cofre.
-- **Dónde se guardan las cosas:** adentro del propio amuleto (como una caja de shulker). Si te lo sacás, la ventana se cierra y las cosas se van con el amuleto; si te lo ponés de nuevo, siguen ahí. Si morís, el amuleto se comporta como cualquier otro objeto tuyo (cae o no según tu gamerule `keepInventory`).
-- **Inventario lleno:** si el amuleto está puesto y tu inventario no tiene lugar, lo que recojas del suelo se guarda solo en el amuleto. Se apaga con `overflowPickup=false` en el config.
-- **Dónde se consigue:** tiene su lugar en el botín: los **mímicos** de Artifacts lo sueltan con 5% de probabilidad y los cofres de estructuras (minas abandonadas, ciudades antiguas, templos, fortalezas, mansiones, bastiones, etc.) lo traen con 4%. En el creativo está en la pestaña Cobinatio y también en la pestaña de Artifacts.
+- **Cómo se usa:** ponete el amuleto en la ranura de amuletos de Curios y abrí el inventario con la tecla de siempre. Abajo vas a ver el panel "Doble Almacén" con 3 filas de 9. Se usa igual que un cofre: arrastrar, clic derecho para repartir, etc.
+- **Dónde se guardan las cosas:** adentro del propio amuleto (como una caja de shulker). Si te lo sacás, los espacios desaparecen y las cosas se van con el amuleto; si te lo ponés de nuevo, siguen ahí. Si morís, el amuleto se comporta como cualquier otro objeto tuyo (cae o no según tu gamerule `keepInventory`).
+- **Inventario lleno:** si el amuleto está puesto y tu inventario no tiene lugar, lo que recojas del suelo se guarda solo en los espacios extra. Se apaga con `overflowPickup=false` en el config.
+- **Dónde se consigue:** los **mímicos** de Artifacts lo sueltan con 5% de probabilidad y los cofres de estructuras (minas abandonadas, ciudades antiguas, templos, fortalezas, mansiones, bastiones, etc.) lo traen con 4%. En el creativo está en la pestaña Cobinatio y también en la pestaña de Artifacts.
+- **Para probarlo:** ponete en **modo supervivencia** (`/gamemode survival`). El inventario del modo creativo es otra pantalla distinta de Minecraft y ahí los espacios extra no se muestran (las cosas guardadas siguen a salvo en el amuleto).
+- **Limitación conocida:** con shift+clic desde tu inventario las cosas se mueven entre la mochila y la barra rápida como siempre (no saltan solas al espacio extra); para llenarlo se arrastra, o se llena solo al recoger cosas con el inventario lleno.
 - **Textura:** por ahora usa la caja de shulker violeta como imagen provisoria. Cuando tengas tu textura, reemplazá el archivo `src/main/resources/assets/mutantraisedead/textures/item/doble_almacen.png` (16x16) y subilo.
 - Hace falta **Curios** (ya lo pide Iron's Spells). **Artifacts** es opcional: sin él, el amuleto igual funciona, pero no hay mímicos para conseguirlo.
-- No agranda la pantalla del inventario de Minecraft: el almacén extra es una ventana aparte. Hacer que el inventario común muestre filas nuevas es mucho más complicado y se puede romper con otros mods.
 
 Qué viene después (todavía NO está): un jefe por cada cangrejo que se pelea en la sala central, y huevos de cangrejo que crecen sobre su mena y dan un cangrejo aliado.
 

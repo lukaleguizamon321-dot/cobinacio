@@ -1,28 +1,11 @@
 package com.mutantraisedead.storage;
 
-import net.minecraft.network.FriendlyByteBuf;
-import net.minecraft.server.level.ServerPlayer;
-import net.minecraftforge.network.NetworkEvent;
-
-import java.util.function.Supplier;
-
-/** El cliente avisa al servidor que apretaste la tecla del Doble Almacen. */
-public record OpenStoragePacket() {
-    public void encode(FriendlyByteBuf buffer) {
-    }
-
-    public static OpenStoragePacket decode(FriendlyByteBuf buffer) {
-        return new OpenStoragePacket();
-    }
-
-    public void handle(Supplier<NetworkEvent.Context> context) {
-        NetworkEvent.Context ctx = context.get();
-        ctx.enqueueWork(() -> {
-            ServerPlayer player = ctx.getSender();
-            if (player != null) {
-                StorageHelper.open(player);
-            }
-        });
-        ctx.setPacketHandled(true);
+/**
+ * Archivo vacio. En la v1.10 el Doble Almacen abria una ventana aparte y esta clase se usaba para eso;
+ * en la v1.11 el inventario crece solo y ya no hace falta. Se deja vacio para que, al subir los archivos
+ * nuevos a GitHub, pise al viejo y no quede codigo roto. Se puede borrar del repo si querés.
+ */
+final class OpenStoragePacket {
+    private OpenStoragePacket() {
     }
 }

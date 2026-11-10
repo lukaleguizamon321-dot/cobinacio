@@ -3,20 +3,45 @@ package com.mutantraisedead.storage;
 import com.mutantraisedead.Config;
 import com.mutantraisedead.MutantRaiseDead;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.world.Container;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
+import net.minecraftforge.common.util.FakePlayer;
+import net.minecraftforge.event.TickEvent;
+import net.minecraftforge.event.entity.EntityJoinLevelEvent;
 import net.minecraftforge.event.entity.player.EntityItemPickupEvent;
 import net.minecraftforge.eventbus.api.SubscribeEvent;
 import net.minecraftforge.fml.common.Mod;
 
 /**
- * Cuando el inventario esta lleno y llevas puesto el Doble Almacen, lo que recoges del suelo
- * se guarda en el amuleto (asi se siente como un inventario mas grande).
+ * Lado del servidor del Doble Almacen: agrega los espacios extra al inventario, los mantiene al dia
+ * con el amuleto y, cuando el inventario esta lleno, guarda ahi lo que recoges del suelo.
  */
 @Mod.EventBusSubscriber(modid = MutantRaiseDead.MODID)
 public final class StorageEvents {
     private StorageEvents() {
+    }
+
+    /** Apenas el jugador entra al mundo (o cambia de dimension o revive) se le agregan los espacios. */
+    @SubscribeEvent
+    public static void onJoin(EntityJoinLevelEvent event) {
+        if (event.getEntity() instanceof ServerPlayer player && !(player instanceof FakePlayer)) {
+            ExtraSlots.install(player);
+        }
+    }
+
+    @SubscribeEvent
+    public static void onPlayerTick(TickEvent.PlayerTickEvent event) {
+        if (event.phase != TickEvent.Phase.END || !(event.player instanceof ServerPlayer player) || player instanceof FakePlayer) {
+            return;
+        }
+        ExtraContainer container = ExtraSlots.get(player);
+        if (container == null) {
+            ExtraSlots.install(player);
+            container = ExtraSlots.get(player);
+        }
+        if (container != null) {
+            container.tick();
+        }
     }
 
     @SubscribeEvent
@@ -30,14 +55,13 @@ public final class StorageEvents {
         if (stack.isEmpty() || entity.hasPickUpDelay() || StorageHelper.inventoryHasRoom(player.getInventory(), stack)) {
             return;
         }
-        ItemStack charm = StorageHelper.findCharm(player);
-        if (charm.isEmpty()) {
+        ExtraContainer container = ExtraSlots.get(player);
+        if (container == null || !container.isEnabled()) {
             return;
         }
 
-        Container container = StorageHelper.containerFor(player, charm);
         int before = stack.getCount();
-        ItemStack rest = StorageHelper.insert(container, stack.copy());
+        ItemStack rest = container.addItem(stack.copy());
         int moved = before - rest.getCount();
         if (moved <= 0) {
             return;

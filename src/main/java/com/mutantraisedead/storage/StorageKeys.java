@@ -1,24 +1,11 @@
 package com.mutantraisedead.storage;
 
-import com.mojang.blaze3d.platform.InputConstants;
-import com.mutantraisedead.MutantRaiseDead;
-import net.minecraft.client.KeyMapping;
-import net.minecraftforge.api.distmarker.Dist;
-import net.minecraftforge.client.event.RegisterKeyMappingsEvent;
-import net.minecraftforge.eventbus.api.SubscribeEvent;
-import net.minecraftforge.fml.common.Mod;
-
-/** La tecla para abrir el Doble Almacen (se puede cambiar en Controles). Solo cliente. */
-@Mod.EventBusSubscriber(modid = MutantRaiseDead.MODID, bus = Mod.EventBusSubscriber.Bus.MOD, value = Dist.CLIENT)
-public final class StorageKeys {
-    public static final KeyMapping OPEN = new KeyMapping(
-            "key.mutantraisedead.doble_almacen", InputConstants.KEY_B, "key.categories.mutantraisedead");
-
+/**
+ * Archivo vacio. En la v1.10 el Doble Almacen abria una ventana aparte y esta clase se usaba para eso;
+ * en la v1.11 el inventario crece solo y ya no hace falta. Se deja vacio para que, al subir los archivos
+ * nuevos a GitHub, pise al viejo y no quede codigo roto. Se puede borrar del repo si querés.
+ */
+final class StorageKeys {
     private StorageKeys() {
-    }
-
-    @SubscribeEvent
-    public static void onRegisterKeys(RegisterKeyMappingsEvent event) {
-        event.register(OPEN);
     }
 }

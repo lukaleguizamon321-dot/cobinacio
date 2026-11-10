@@ -1,22 +1,11 @@
 package com.mutantraisedead.storage;
 
-import com.mutantraisedead.MutantRaiseDead;
-import net.minecraft.resources.ResourceLocation;
-import net.minecraftforge.network.NetworkRegistry;
-import net.minecraftforge.network.simple.SimpleChannel;
-
-/** Canal de red del mod (por ahora un solo mensaje: "abrir el Doble Almacen"). */
-public final class ModNetwork {
-    private static final String VERSION = "1";
-
-    public static final SimpleChannel CHANNEL = NetworkRegistry.newSimpleChannel(
-            new ResourceLocation(MutantRaiseDead.MODID, "main"), () -> VERSION, VERSION::equals, VERSION::equals);
-
+/**
+ * Archivo vacio. En la v1.10 el Doble Almacen abria una ventana aparte y esta clase se usaba para eso;
+ * en la v1.11 el inventario crece solo y ya no hace falta. Se deja vacio para que, al subir los archivos
+ * nuevos a GitHub, pise al viejo y no quede codigo roto. Se puede borrar del repo si querés.
+ */
+final class ModNetwork {
     private ModNetwork() {
-    }
-
-    public static void register() {
-        CHANNEL.registerMessage(0, OpenStoragePacket.class,
-                OpenStoragePacket::encode, OpenStoragePacket::decode, OpenStoragePacket::handle);
     }
 }

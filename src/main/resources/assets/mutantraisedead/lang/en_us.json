@@ -76,5 +76,11 @@
   "block.mutantraisedead.amethyst_crab_nest": "Mena de Amatista (nido de cangrejo)",
   "block.mutantraisedead.redstone_crab_nest": "Mena de Redstone (nido de cangrejo)",
   "block.mutantraisedead.diamond_crab_nest": "Mena de Diamante (nido de cangrejo)",
-  "block.mutantraisedead.emerald_crab_nest": "Mena de Esmeralda (nido de cangrejo)"
+  "block.mutantraisedead.emerald_crab_nest": "Mena de Esmeralda (nido de cangrejo)",
+  "item.mutantraisedead.doble_almacen": "Doble Almacén",
+  "container.mutantraisedead.doble_almacen": "Doble Almacén",
+  "tooltip.mutantraisedead.doble_almacen.slots": "+%s espacios de almacenamiento extra",
+  "tooltip.mutantraisedead.doble_almacen.open": "Agranda tu inventario: abajo aparecen 27 espacios más, como un cofre doble.",
+  "tooltip.mutantraisedead.doble_almacen.overflow": "Si tu inventario está lleno, lo que recojas se guarda en esos espacios.",
+  "tooltip.mutantraisedead.doble_almacen.stored": "Guardado: %s pilas"
 }

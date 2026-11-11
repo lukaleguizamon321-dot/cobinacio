@@ -20,6 +20,8 @@ public final class Config {
     public static final ForgeConfigSpec.DoubleValue PLANT_DAMAGE;
     public static final ForgeConfigSpec.BooleanValue CRAB_ABILITIES;
     public static final ForgeConfigSpec.IntValue GIANT_CRAB_HITS;
+    public static final ForgeConfigSpec.IntValue COAL_BOSS_HEALTH;
+    public static final ForgeConfigSpec.IntValue BOSS_WAKE_RANGE;
     public static final ForgeConfigSpec.IntValue DETECTED_SECONDS;
     public static final ForgeConfigSpec.IntValue DETECTED_RANGE;
     public static final ForgeConfigSpec.IntValue UNLUCKY_SECONDS;
@@ -123,6 +125,12 @@ public final class Config {
         GIANT_CRAB_HITS = b
                 .comment("Cuantos golpes de pico hacen falta para matar al cangrejo gigante de hierro.")
                 .defineInRange("giantCrabHits", 20, 1, 500);
+        COAL_BOSS_HEALTH = b
+                .comment("Vida del jefe Cangrejo Titan de Carbon (300 = 150 corazones). Solo afecta a los jefes que aparezcan despues de cambiarlo.")
+                .defineInRange("coalBossHealth", 300, 20, 10000);
+        BOSS_WAKE_RANGE = b
+                .comment("A cuantos bloques de distancia del huevo de la guarida se despierta el jefe.")
+                .defineInRange("bossWakeRange", 7, 2, 24);
         DETECTED_SECONDS = b
                 .comment("Cangrejo de redstone: segundos que dura el efecto Detectado (300 = 5 minutos).")
                 .defineInRange("detectedSeconds", 300, 1, 36000);

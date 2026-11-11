@@ -127,6 +127,8 @@ public class LairFeature extends Feature<NoneFeatureConfiguration> {
             }
         }
         set(level, cx, y0 + 2, cz, p.chiseled());
+        // El huevo del jefe de carbon va arriba del pedestal; al acercarte despierta (ver CrabEggBlock)
+        set(level, cx, y0 + 3, cz, ModBlocks.COAL_EGG.get().defaultBlockState().setValue(CrabEggBlock.PEDESTAL, true));
 
         // 3) Puerta de 3x4 hacia uno de los cuatro lados (atraviesa la pared)
         int doorQuarter = random.nextInt(4);

@@ -27,6 +27,11 @@ public final class CrabEvents {
     }
 
     @SubscribeEvent
+    public static void onBossAttributes(EntityAttributeCreationEvent event) {
+        event.put(ModEntities.COAL_BOSS.get(), CoalCrabBossEntity.createAttributes().build());
+    }
+
+    @SubscribeEvent
     public static void onSpawnPlacements(SpawnPlacementRegisterEvent event) {
         for (GrottolVariant variant : GrottolVariant.values()) {
             event.register(ModEntities.CRABS.get(variant).get(),

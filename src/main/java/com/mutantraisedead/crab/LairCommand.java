@@ -41,9 +41,10 @@ public final class LairCommand {
 
         LairFeature.build(level, center, level.getRandom(), true);
 
-        // El centro es el pedestal, asi que te dejamos a un costado, sobre el piso.
-        player.teleportTo(level, center.getX() + 4.5D, center.getY(), center.getZ() + 0.5D, player.getYRot(), player.getXRot());
-        source.sendSuccess(() -> Component.literal("Guarida creada. El pedestal esta en el centro; los nidos, en la pared."), true);
+        // El centro es el pedestal con el huevo del jefe. Te dejamos a un costado, sobre el piso y fuera del alcance
+        // del huevo (8.5 bloques), para que el jefe no despierte hasta que te acerques vos.
+        player.teleportTo(level, center.getX() + 8.5D, center.getY(), center.getZ() + 0.5D, 90.0F, 0.0F);
+        source.sendSuccess(() -> Component.literal("Guarida creada. En el centro esta el huevo del jefe: cuando te acerques, despierta. Los nidos estan en la pared."), true);
         return 1;
     }
 }

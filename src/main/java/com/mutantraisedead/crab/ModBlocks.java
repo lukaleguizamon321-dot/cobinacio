@@ -3,9 +3,11 @@ package com.mutantraisedead.crab;
 import com.mutantraisedead.MutantRaiseDead;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
+import net.minecraft.world.item.Rarity;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.SoundType;
+import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.levelgen.feature.Feature;
 import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConfiguration;
@@ -24,6 +26,8 @@ public final class ModBlocks {
     private static final DeferredRegister<Block> BLOCKS = DeferredRegister.create(ForgeRegistries.BLOCKS, MutantRaiseDead.MODID);
     private static final DeferredRegister<Item> ITEMS = DeferredRegister.create(ForgeRegistries.ITEMS, MutantRaiseDead.MODID);
     private static final DeferredRegister<Feature<?>> FEATURES = DeferredRegister.create(ForgeRegistries.FEATURES, MutantRaiseDead.MODID);
+    private static final DeferredRegister<BlockEntityType<?>> BLOCK_ENTITIES =
+            DeferredRegister.create(ForgeRegistries.BLOCK_ENTITY_TYPES, MutantRaiseDead.MODID);
 
     public static final RegistryObject<Block> NEST =
             BLOCKS.register("iron_crab_nest", () -> new GrottolNestBlock(BlockBehaviour.Properties.copy(Blocks.IRON_ORE), GrottolVariant.IRON));
@@ -59,6 +63,22 @@ public final class ModBlocks {
         }
     }
 
+    /**
+     * Huevo del jefe de carbon (v1.12): descansa sobre el pedestal del centro de la guarida. No se puede picar en
+     * supervivencia (dureza -1); en creativo se puede poner y sacar para probar.
+     */
+    public static final RegistryObject<Block> COAL_EGG = BLOCKS.register("coal_crab_egg", () -> new CrabEggBlock(
+            BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_BLACK)
+                    .strength(-1.0F, 3600000.0F)
+                    .sound(SoundType.STONE)
+                    .lightLevel(state -> 5)
+                    .noOcclusion()));
+    public static final RegistryObject<Item> COAL_EGG_ITEM =
+            ITEMS.register("coal_crab_egg", () -> new BlockItem(COAL_EGG.get(), new Item.Properties().rarity(Rarity.EPIC)));
+    public static final RegistryObject<BlockEntityType<CrabEggBlockEntity>> CRAB_EGG_ENTITY =
+            BLOCK_ENTITIES.register("crab_egg", () -> BlockEntityType.Builder.of(CrabEggBlockEntity::new, COAL_EGG.get()).build(null));
+
     public static final RegistryObject<NestFeature> NEST_FEATURE =
             FEATURES.register("iron_crab_nest", () -> new NestFeature(NoneFeatureConfiguration.CODEC));
     public static final RegistryObject<LairFeature> LAIR_FEATURE =
@@ -84,5 +104,6 @@ public final class ModBlocks {
         BLOCKS.register(bus);
         ITEMS.register(bus);
         FEATURES.register(bus);
+        BLOCK_ENTITIES.register(bus);
     }
 }

@@ -32,6 +32,16 @@ public final class ModEntities {
     public static final RegistryObject<Item> GIANT_CRAB_EGG = ITEMS.register("giant_iron_crab_spawn_egg", () ->
             new ForgeSpawnEggItem(GIANT_CRAB, 0x555558, 0xAA8670, new Item.Properties()));
 
+    /** Jefe de la guarida: Cangrejo Titan de Carbon (3 bloques de ancho, 6 de alto). Sale del huevo del pedestal. */
+    public static final RegistryObject<EntityType<CoalCrabBossEntity>> COAL_BOSS = TYPES.register("coal_crab_boss", () ->
+            EntityType.Builder.<CoalCrabBossEntity>of(CoalCrabBossEntity::new, MobCategory.MONSTER)
+                    .sized(3.0F, 6.0F)
+                    .fireImmune()
+                    .clientTrackingRange(16)
+                    .build(MutantRaiseDead.MODID + ":coal_crab_boss"));
+    public static final RegistryObject<Item> COAL_BOSS_EGG = ITEMS.register("coal_crab_boss_spawn_egg", () ->
+            new ForgeSpawnEggItem(COAL_BOSS, 0x1B1B1F, 0xE0701A, new Item.Properties()));
+
     static {
         for (GrottolVariant variant : GrottolVariant.values()) {
             RegistryObject<EntityType<GrottolVariantEntity>> type = TYPES.register(variant.id, () ->

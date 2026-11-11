@@ -82,5 +82,8 @@
   "tooltip.mutantraisedead.doble_almacen.slots": "+%s espacios de almacenamiento extra",
   "tooltip.mutantraisedead.doble_almacen.open": "Agranda tu inventario: abajo aparecen 27 espacios más, como un cofre doble.",
   "tooltip.mutantraisedead.doble_almacen.overflow": "Si tu inventario está lleno, lo que recojas se guarda en esos espacios.",
-  "tooltip.mutantraisedead.doble_almacen.stored": "Guardado: %s pilas"
+  "tooltip.mutantraisedead.doble_almacen.stored": "Guardado: %s pilas",
+  "entity.mutantraisedead.coal_crab_boss": "Cangrejo Titán de Carbón",
+  "item.mutantraisedead.coal_crab_boss_spawn_egg": "Huevo de aparición de Cangrejo Titán de Carbón",
+  "block.mutantraisedead.coal_crab_egg": "Huevo del Cangrejo Titán de Carbón"
 }

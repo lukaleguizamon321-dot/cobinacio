@@ -1,4 +1,4 @@
-# Cobinatio v1.11.1 (Forge 1.20.1)
+# Cobinatio v1.12.0 (Forge 1.20.1)
 
 Combina hechizos de Iron's Spells 'n Spellbooks con mobs de otros mods.
 
@@ -181,5 +181,23 @@ Un amuleto nuevo para la ranura de **amuletos (charm) de Curios**, pensado para 
 - Hace falta **Curios** (ya lo pide Iron's Spells). **Artifacts** es opcional: sin él, el amuleto igual funciona, pero no hay mímicos para conseguirlo.
 - **v1.11.1 - la ranura de amuletos viene con Cobinatio:** Curios por sí solo define el tipo de ranura "charm" (amuleto) pero no se la da al jugador; eso lo hacía otro mod. Ahora Cobinatio se la da al jugador por su cuenta (archivo `data/mutantraisedead/curios/entities/doble_almacen.json`), así que alcanza con tener **Curios** instalado. Curios muestra sus ranuras junto a la pantalla del inventario (como cuadritos a la izquierda o con un botón que abre su propia pantalla, según su configuración); ahí vas a ver la de amuleto.
 
-Qué viene después (todavía NO está): un jefe por cada cangrejo que se pelea en la sala central, y huevos de cangrejo que crecen sobre su mena y dan un cangrejo aliado.
+## v1.12 - Jefe: Cangrejo Titán de Carbón
+
+En el centro de cada guarida, sobre el pedestal, ahora hay un **huevo**. Mientras nadie se acerca, duerme. Cuando un jugador se le acerca (7 bloques) o lo toca con clic derecho, **el huevo desaparece, el pedestal del centro se destruye y sale el jefe**.
+
+- **Tamaño:** 3 bloques de ancho y 6 de alto. Al despertar sale del suelo rugiendo (unos 3 segundos) y mientras tanto no recibe daño.
+- **Vida:** 300 (150 corazones). Se cambia en el config con `coalBossHealth`. Tiene barra de vida del jefe arriba en la pantalla.
+- **Ataques (son tres, nada más):**
+  1. **Bolas de fuego:** un abanico de 3 bolas hacia vos (5 si está furioso), como el cangrejo de carbón chico pero de a varias.
+  2. **Embestida:** se queda un momento temblando (aviso para que te corras), después corre en línea recta y se lleva puesto a quien se cruce. Si choca contra una pared se aturde unos segundos: es el momento para pegarle.
+  3. **Llamarada:** prepara el fuego y escupe un cono de llamas hacia adelante que va girando despacio hacia vos. Se esquiva corriendo hacia un costado. Quema a quien alcance.
+- **Furioso:** con menos de la mitad de vida espera menos entre ataque y ataque, y la embestida es más rápida.
+- **No le hace daño el fuego ni la caída.** A diferencia de los cangrejos chicos, a este se lo puede matar con cualquier arma o hechizo, no hace falta un pico.
+- **Botín:** al morir suelta **bloques de carbón** (de 12 a 24, más con Saqueo) y experiencia. Más adelante hacemos el huevo y el resto del botín.
+- **El huevo:** en supervivencia no se puede picar (si no, te saltabas al jefe). En el modo creativo está en la pestaña Cobinatio para ponerlo donde quieras (suelto, el jefe aparece donde estaba el huevo). También hay un huevo de aparición del jefe para probarlo.
+- **Para probarlo:** `/cobinatio guarida` crea una guarida y te deja adentro, lejos del huevo. Caminá hacia el pedestal del centro para despertar al jefe. El alcance se cambia con `bossWakeRange`.
+- **Modelo provisorio:** por ahora usa el cangrejo de carbón común, agrandado y estirado hasta los 6 bloques de alto, por eso se ve alargado. La caja de golpes y el modelo miden lo mismo. Cuando tengas el modelo propio en Blockbench lo cambiamos. El huevo usa la textura del huevo del dragón de Minecraft como provisoria.
+- Es el primer jefe; los de los otros materiales se hacen después con esta misma base.
+
+Qué viene después (todavía NO está): los jefes de los demás cangrejos, el huevo de cangrejo que se consigue y da un cangrejo aliado, y el resto del botín del jefe de carbón.
 

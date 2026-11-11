@@ -25,4 +25,9 @@ public final class ClientSetup {
     public static void onGiantRenderer(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(ModEntities.GIANT_CRAB.get(), GiantIronCrabRenderer::new);
     }
+
+    @SubscribeEvent
+    public static void onBossRenderer(EntityRenderersEvent.RegisterRenderers event) {
+        event.registerEntityRenderer(ModEntities.COAL_BOSS.get(), CoalCrabBossRenderer::new);
+    }
 }

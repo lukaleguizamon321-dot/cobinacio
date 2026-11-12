@@ -1,1 +1,6 @@
-{"parent": "mutantraisedead:block/coal_crab_egg"}
+{
+  "parent": "minecraft:item/generated",
+  "textures": {
+    "layer0": "mutantraisedead:item/coal_crab_egg"
+  }
+}

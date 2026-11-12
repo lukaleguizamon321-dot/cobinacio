@@ -35,7 +35,7 @@ import org.jetbrains.annotations.Nullable;
  */
 public class CrabEggBlock extends Block implements EntityBlock {
     public static final BooleanProperty PEDESTAL = BooleanProperty.create("pedestal");
-    private static final VoxelShape SHAPE = Block.box(3.0D, 0.0D, 3.0D, 13.0D, 15.0D, 13.0D);
+    private static final VoxelShape SHAPE = Block.box(4.0D, 0.0D, 4.0D, 12.0D, 11.0D, 12.0D);
 
     /** El pedestal de la guarida (ver LairFeature) tiene 3 capas debajo del huevo. */
     private static final int PEDESTAL_LAYERS = 3;

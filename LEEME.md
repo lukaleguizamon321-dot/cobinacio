@@ -1,4 +1,4 @@
-# Cobinatio v1.12.0 (Forge 1.20.1)
+# Cobinatio v1.12.1 (Forge 1.20.1)
 
 Combina hechizos de Iron's Spells 'n Spellbooks con mobs de otros mods.
 
@@ -196,8 +196,19 @@ En el centro de cada guarida, sobre el pedestal, ahora hay un **huevo**. Mientra
 - **Botín:** al morir suelta **bloques de carbón** (de 12 a 24, más con Saqueo) y experiencia. Más adelante hacemos el huevo y el resto del botín.
 - **El huevo:** en supervivencia no se puede picar (si no, te saltabas al jefe). En el modo creativo está en la pestaña Cobinatio para ponerlo donde quieras (suelto, el jefe aparece donde estaba el huevo). También hay un huevo de aparición del jefe para probarlo.
 - **Para probarlo:** `/cobinatio guarida` crea una guarida y te deja adentro, lejos del huevo. Caminá hacia el pedestal del centro para despertar al jefe. El alcance se cambia con `bossWakeRange`.
-- **Modelo provisorio:** por ahora usa el cangrejo de carbón común, agrandado y estirado hasta los 6 bloques de alto, por eso se ve alargado. La caja de golpes y el modelo miden lo mismo. Cuando tengas el modelo propio en Blockbench lo cambiamos. El huevo usa la textura del huevo del dragón de Minecraft como provisoria.
+- **Modelo:** desde la v1.13.0 usa tu modelo propio (ver más abajo).
+- **El huevo (v1.12.1):** ya usa tu modelo y tu textura de Blockbench (`models/block/coal_crab_egg.json` y `textures/block/coal_crab_egg.png`), y tu dibujo como ícono en el inventario (`textures/item/coal_crab_egg.png`). La caja de golpes del huevo mide lo mismo que el modelo (8 de ancho y 11 de alto).
 - Es el primer jefe; los de los otros materiales se hacen después con esta misma base.
+
+## v1.13.0 - El jefe ya tiene su modelo de Blockbench
+
+El Cangrejo Titán de Carbón ahora se ve con **tu modelo y tu textura** (`boss.bbmodel`): caparazón de cubos de carbón, cuerpo marrón con ojos rojos, 4 patas grandes y 2 pinzas enormes.
+
+- **Tamaño:** el modelo, tal como lo hiciste, mide 5,25 bloques de alto (del suelo al techo del caparazón). Lo agrandé parejo **1,14 veces** para que mida **6 bloques de alto**. El caparazón queda de unos 4,7 de ancho y, con las patas abiertas, el bicho se ve de unos 12 bloques de punta a punta. La **caja de golpes** sigue siendo de **3 de ancho x 6 de alto** (lo que se golpea es el cuerpo del centro; las patas y las pinzas son solo visuales). Entra en la sala de la guarida (radio de 10 bloques y 9 de alto). Si lo querés más grande o más chico, se cambia un solo número (`SCALE` en `CoalCrabBossRenderer.java`); si querés la caja más ancha, se cambia el `sized(3.0F, 6.0F)` del jefe en `ModEntities.java`.
+- **Se mueve igual que antes:** las 4 patas caminan en diagonal, las pinzas se levantan al rugir y al lanzar fuego, se abren al prepararse para la embestida, se juntan al embestir y caen cuando se aturde; el caparazón tiembla. Al despertar sale del suelo.
+- **Las bolas de fuego y la llamarada** ahora salen de la boca del modelo (2,6 bloques adelante y 3,9 de alto).
+- **Textura:** `textures/entity/coal_crab_boss.png` (512x512) es la primera que me mandaste ("textura para el boss de carbón", negra con grietas y ojos naranjas). Encaja exacto con las caras del modelo. La textura de la segunda versión del modelo (la de colores pastel a medio pintar) no se usa.
+- **Cosas del modelo que ajusté:** (1) un cubo suelto de color celeste que estaba **oculto** en el modelo (a un costado del caparazón) no se incluye, igual que en Blockbench. (2) Las caras que quedan pegadas entre cubos (tapadas por dentro) se sacan, para que el modelo sea más liviano. (3) Las patas y las pinzas de tu modelo estaban un poco por debajo del suelo (las puntas de las pinzas, unos 5 píxeles); las pinzas en reposo se suben un poquito para no atravesar el piso.
 
 Qué viene después (todavía NO está): los jefes de los demás cangrejos, el huevo de cangrejo que se consigue y da un cangrejo aliado, y el resto del botín del jefe de carbón.
 

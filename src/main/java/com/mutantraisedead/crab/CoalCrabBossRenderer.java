@@ -7,29 +7,27 @@ import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.resources.ResourceLocation;
 
 /**
- * Renderer PROVISORIO del jefe de carbon: usa el modelo y la textura del cangrejo de carbon comun,
- * agrandado hasta los 3 bloques de ancho y estirado hasta los 6 de alto (la caja del jefe mide 3 x 6).
- * Cuando haya un modelo propio, solo hay que cambiar el modelo, la textura y estos numeros.
+ * Renderer del jefe de carbon (Coal Crab Titan) con su modelo de Blockbench (boss.bbmodel) y su textura propia.
  */
 public class CoalCrabBossRenderer extends MobRenderer<CoalCrabBossEntity, CoalCrabBossModel> {
     private static final ResourceLocation TEXTURE =
-            ResourceLocation.fromNamespaceAndPath(MutantRaiseDead.MODID, "textures/entity/grottol_coal.png");
+            ResourceLocation.fromNamespaceAndPath(MutantRaiseDead.MODID, "textures/entity/coal_crab_boss.png");
 
     /**
-     * El modelo comun mide 1.6 de ancho x 1.18 de alto: 1.9 lo deja en 3 bloques de ancho y 5.1 de alto lo estira
-     * hasta los 6 bloques de la caja del jefe (asi lo que se ve es lo que se golpea). Se ve alargado a proposito:
-     * es provisorio hasta que haya modelo propio.
+     * El modelo, tal como lo hiciste en Blockbench, mide 5,25 bloques de alto (del suelo al techo del caparazon).
+     * 1.14 lo deja en 6 bloques de alto, como pediste. Las patas y las pinzas abiertas salen mas anchas que la
+     * caja del jefe (3 x 6): la caja es lo que se golpea, el modelo es lo que se ve.
+     * Si lo queres mas grande o mas chico, solo hay que cambiar este numero.
      */
-    private static final float SCALE_XZ = 1.9F;
-    private static final float SCALE_Y = 5.1F;
+    private static final float SCALE = 1.14F;
 
     public CoalCrabBossRenderer(EntityRendererProvider.Context context) {
-        super(context, new CoalCrabBossModel(), 2.2F);
+        super(context, new CoalCrabBossModel(), 3.0F);
     }
 
     @Override
     protected void scale(CoalCrabBossEntity entity, PoseStack poseStack, float partialTick) {
-        poseStack.scale(SCALE_XZ, SCALE_Y, SCALE_XZ);
+        poseStack.scale(SCALE, SCALE, SCALE);
     }
 
     @Override

@@ -197,10 +197,10 @@ public class CoalCrabBossEntity extends PathfinderMob {
         return new Vec3(-Mth.sin(rad), 0.0D, Mth.cos(rad));
     }
 
-    /** Desde donde salen las bolas de fuego y la llamarada. */
+    /** Desde donde salen las bolas de fuego y la llamarada: la boca del modelo (2,6 bloques adelante, 3,9 de alto). */
     private Vec3 mouth() {
         Vec3 f = forward();
-        return position().add(f.x * 1.8D, 2.8D, f.z * 1.8D);
+        return position().add(f.x * 2.6D, 3.9D, f.z * 2.6D);
     }
 
     /** Gira el cuerpo hacia un punto, como mucho maxStep grados por tick. */

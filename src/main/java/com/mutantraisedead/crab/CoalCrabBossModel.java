@@ -12,18 +12,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Modelo PROVISORIO del jefe de carbon: es el modelo del cangrejo comun (el de Blockbench, "cangry.bbmodel"),
- * que el renderer agranda y estira. Cuando haya un modelo propio del jefe, se cambia este archivo.
- * Mismas piezas moviles que el cangrejo: body, shell, leg0..leg3, clawP / clawN.
+ * Modelo del jefe de carbon (Coal Crab Titan), hecho en Blockbench ("boss.bbmodel"): caparazon de cubos de carbon,
+ * cuerpo con ojos rojos, 4 patas grandes y 2 pinzas enormes.
+ * Piezas moviles: body, shell, leg0..leg3 (leg0/leg1 = lado +x, delante/atras; leg2/leg3 = lado -x), clawP (+x) / clawN (-x).
  * Las animaciones usan las mismas direcciones que en Blockbench (Y arriba, el frente es -Z).
+ * La geometria esta en CrabMeshData.BOSS; el renderer lo agranda con SCALE.
  */
 public class CoalCrabBossModel extends EntityModel<CoalCrabBossEntity> {
     private static final float UNIT = 1.0F / 16.0F;
     private static final float FLOOR = 1.501F;
     private static final String[] ORDER = {"body", "shell", "leg0", "leg1", "leg2", "leg3", "clawP", "clawN"};
 
-    /** Cuanto se hunde (en bloques del modelo, antes de agrandarlo) mientras sale del suelo. */
-    private static final float AWAKEN_DEPTH = 1.3F;
+    /** Cuanto se hunde (en bloques del modelo, antes de agrandarlo) mientras sale del suelo: todo el cuerpo (5,25 de alto). */
+    private static final float AWAKEN_DEPTH = 5.4F;
 
     private static final class Quad {
         float nx;
@@ -39,7 +40,7 @@ public class CoalCrabBossModel extends EntityModel<CoalCrabBossEntity> {
         final List<Quad> quads = new ArrayList<>();
     }
 
-    private static final Group[] GROUPS = parse(CrabMeshData.DATA);
+    private static final Group[] GROUPS = parse(CrabMeshData.BOSS);
 
     private final float[] rx = new float[ORDER.length];
     private final float[] ry = new float[ORDER.length];
@@ -56,11 +57,18 @@ public class CoalCrabBossModel extends EntityModel<CoalCrabBossEntity> {
         throw new IllegalStateException("Pieza desconocida en el modelo: " + name);
     }
 
-    private static Group[] parse(String data) {
+    private static Group[] parse(String[] chunks) {
         Group[] groups = new Group[ORDER.length];
         for (int i = 0; i < groups.length; i++) {
             groups[i] = new Group();
         }
+        for (String data : chunks) {
+            parseChunk(data, groups);
+        }
+        return groups;
+    }
+
+    private static void parseChunk(String data, Group[] groups) {
         for (String raw : data.split("\n")) {
             String line = raw.trim();
             if (line.isEmpty()) {
@@ -83,7 +91,6 @@ public class CoalCrabBossModel extends EntityModel<CoalCrabBossEntity> {
                 g.quads.add(q);
             }
         }
-        return groups;
     }
 
     @Override
@@ -104,8 +111,8 @@ public class CoalCrabBossModel extends EntityModel<CoalCrabBossEntity> {
             float side = i < 2 ? 1.0F : -1.0F;
             float phase = (i == 0 || i == 2) ? 0.0F : Mth.PI;
             float s = limbSwing * legSpeed + phase;
-            ry[idx] = side * Mth.cos(s) * 0.35F * walk;
-            rz[idx] = side * (Math.max(0.0F, Mth.sin(s)) * 0.30F * walk + Mth.sin(ageInTicks * 0.1F + i * 1.7F) * 0.02F);
+            ry[idx] = side * Mth.cos(s) * 0.20F * walk;
+            rz[idx] = side * (Math.max(0.0F, Mth.sin(s)) * 0.17F * walk + Mth.sin(ageInTicks * 0.1F + i * 1.7F) * 0.012F);
         }
 
         // Pinzas y caparazon, segun lo que esta haciendo
@@ -116,29 +123,29 @@ public class CoalCrabBossModel extends EntityModel<CoalCrabBossEntity> {
                 case CoalCrabBossEntity.ACTION_AWAKEN -> {
                     // pinzas bien abiertas y en alto, como un rugido
                     rx[idx] = 1.0F + Mth.sin(ageInTicks * 0.9F + i) * 0.1F;
-                    ry[idx] = side * (0.55F + Mth.sin(ageInTicks * 0.5F) * 0.15F);
+                    ry[idx] = side * (0.35F + Mth.sin(ageInTicks * 0.5F) * 0.12F);
                 }
                 case CoalCrabBossEntity.ACTION_FIREBALL -> {
                     rx[idx] = 0.9F + Mth.sin(ageInTicks * 1.4F + i) * 0.1F;
-                    ry[idx] = side * (0.2F + Mth.sin(ageInTicks * 1.6F) * 0.2F);
+                    ry[idx] = side * (0.15F + Mth.sin(ageInTicks * 1.6F) * 0.15F);
                 }
                 case CoalCrabBossEntity.ACTION_CHARGE_WINDUP -> {
                     // pinzas abiertas hacia los costados, temblando
                     rx[idx] = 0.4F;
-                    ry[idx] = side * (0.7F + Mth.sin(ageInTicks * 2.2F) * 0.06F);
+                    ry[idx] = side * (0.45F + Mth.sin(ageInTicks * 2.2F) * 0.05F);
                 }
                 case CoalCrabBossEntity.ACTION_CHARGING -> {
                     // pinzas juntas hacia adelante
-                    rx[idx] = 0.15F;
+                    rx[idx] = 0.25F;
                     ry[idx] = side * -0.1F;
                 }
                 case CoalCrabBossEntity.ACTION_FLAME_WINDUP, CoalCrabBossEntity.ACTION_FLAMING -> {
                     rx[idx] = 1.1F + Mth.sin(ageInTicks * 0.8F + i) * 0.05F;
-                    ry[idx] = side * 0.6F;
+                    ry[idx] = side * 0.4F;
                 }
                 case CoalCrabBossEntity.ACTION_STUNNED -> {
-                    // pinzas caidas
-                    rx[idx] = -0.15F;
+                    // pinzas caidas (sin hundirlas en el suelo)
+                    rx[idx] = 0.05F;
                     ry[idx] = side * 0.25F;
                 }
                 default -> {
@@ -147,7 +154,7 @@ public class CoalCrabBossModel extends EntityModel<CoalCrabBossEntity> {
                         rx[idx] = 0.8F + Mth.sin(ageInTicks * 1.4F + i) * 0.12F;
                         ry[idx] = side * (0.2F + Mth.sin(ageInTicks * 1.6F) * 0.3F);
                     } else {
-                        rx[idx] = 0.1F + Mth.sin(ageInTicks * 0.12F + i * 1.3F) * 0.04F;
+                        rx[idx] = 0.2F + Mth.sin(ageInTicks * 0.12F + i * 1.3F) * 0.04F;
                         ry[idx] = side * (0.05F + Mth.sin(ageInTicks * 0.09F + i * 1.3F) * 0.12F);
                     }
                 }
@@ -155,19 +162,19 @@ public class CoalCrabBossModel extends EntityModel<CoalCrabBossEntity> {
         }
 
         // Caparazon: respira, tiembla al prepararse y se sacude al aturdirse
-        rx[1] = Mth.sin(ageInTicks * 0.07F) * 0.025F;
-        rz[1] = Mth.sin(limbSwing * 1.1F) * 0.03F * walk;
+        rx[1] = Mth.sin(ageInTicks * 0.07F) * 0.015F;
+        rz[1] = Mth.sin(limbSwing * 1.1F) * 0.015F * walk;
         switch (action) {
             case CoalCrabBossEntity.ACTION_AWAKEN, CoalCrabBossEntity.ACTION_CHARGE_WINDUP ->
-                    rz[1] += Mth.sin(ageInTicks * 2.4F) * 0.06F;
-            case CoalCrabBossEntity.ACTION_FLAMING -> rz[1] += Mth.sin(ageInTicks * 1.8F) * 0.03F;
-            case CoalCrabBossEntity.ACTION_STUNNED -> rz[1] += Mth.sin(ageInTicks * 0.7F) * 0.1F;
+                    rz[1] += Mth.sin(ageInTicks * 2.4F) * 0.03F;
+            case CoalCrabBossEntity.ACTION_FLAMING -> rz[1] += Mth.sin(ageInTicks * 1.8F) * 0.015F;
+            case CoalCrabBossEntity.ACTION_STUNNED -> rz[1] += Mth.sin(ageInTicks * 0.7F) * 0.05F;
             default -> {
             }
         }
 
         // Rebote al caminar
-        bob = Math.abs(Mth.cos(limbSwing * legSpeed)) * 0.02F * walk;
+        bob = Math.abs(Mth.cos(limbSwing * legSpeed)) * 0.06F * walk;
 
         // Al despertar sale del suelo
         if (action == CoalCrabBossEntity.ACTION_AWAKEN) {

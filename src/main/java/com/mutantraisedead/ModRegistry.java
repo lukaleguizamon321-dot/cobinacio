@@ -142,6 +142,7 @@ public final class ModRegistry {
                         }
                         output.accept(com.mutantraisedead.crab.ModEntities.GIANT_CRAB_EGG.get());
                         output.accept(com.mutantraisedead.crab.ModEntities.COAL_BOSS_EGG.get());
+                        output.accept(com.mutantraisedead.crab.ModBlocks.COAL_EGG_ROUGH.get());
                         output.accept(com.mutantraisedead.crab.ModBlocks.COAL_EGG_ITEM.get());
                         output.accept(com.mutantraisedead.crab.ModBlocks.NEST_ITEM.get());
                         output.accept(com.mutantraisedead.crab.ModBlocks.DEEPSLATE_NEST_ITEM.get());

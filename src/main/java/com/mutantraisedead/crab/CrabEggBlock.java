@@ -12,8 +12,11 @@ import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.BlockGetter;
+import net.minecraft.world.level.Explosion;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.EntityBlock;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.BlockEntityTicker;
@@ -21,17 +24,20 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.StateDefinition;
 import net.minecraft.world.level.block.state.properties.BooleanProperty;
+import net.minecraft.world.level.material.PushReaction;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.CollisionContext;
 import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Huevo del jefe de carbon. Esta sobre el pedestal del centro de la guarida y duerme.
- * Cuando alguien se acerca (o lo toca) el huevo desaparece, se destruye el pedestal y sale el Cangrejo Titan de Carbon.
+ * Huevo de Cangrejo de Carbon. Tiene dos usos segun la propiedad "pedestal":
  *
- * El huevo se rompe solo con el comando de creativo; en supervivencia no se puede picar (si no, se salteaban al jefe).
- * La propiedad "pedestal" vale true cuando lo puso la guarida: en ese caso se destruye el pedestal de abajo.
+ *  - pedestal = true: el huevo NATURAL de la guarida. Duerme sobre el pedestal del centro; cuando alguien se acerca
+ *    (o lo toca) desaparece, se destruye el pedestal y sale el Cangrejo Titan de Carbon. No se puede romper en
+ *    supervivencia (si no, se salteaban al jefe).
+ *  - pedestal = false: el huevo PULIDO que puso un jugador. Nunca invoca al jefe: si esta sobre un bloque de carbon,
+ *    incuba (ver CrabEggBlockEntity) y nace un cangrejo chico aliado. Se puede romper y devuelve el huevo pulido.
  */
 public class CrabEggBlock extends Block implements EntityBlock {
     public static final BooleanProperty PEDESTAL = BooleanProperty.create("pedestal");
@@ -39,6 +45,11 @@ public class CrabEggBlock extends Block implements EntityBlock {
 
     /** El pedestal de la guarida (ver LairFeature) tiene 3 capas debajo del huevo. */
     private static final int PEDESTAL_LAYERS = 3;
+
+    /** El bloque de material puro sobre el que incuba el huevo de carbon (con otros materiales, el bloque de ese material). */
+    public static boolean isIncubator(BlockState below) {
+        return below.is(Blocks.COAL_BLOCK);
+    }
 
     public CrabEggBlock(Properties properties) {
         super(properties);
@@ -53,6 +64,39 @@ public class CrabEggBlock extends Block implements EntityBlock {
     @Override
     public VoxelShape getShape(BlockState state, BlockGetter level, BlockPos pos, CollisionContext context) {
         return SHAPE;
+    }
+
+    /** El huevo natural es indestructible en supervivencia; el pulido se rompe facil. */
+    @Override
+    public float getDestroyProgress(BlockState state, Player player, BlockGetter level, BlockPos pos) {
+        if (state.getValue(PEDESTAL)) {
+            return 0.0F;
+        }
+        return super.getDestroyProgress(state, player, level, pos);
+    }
+
+    @Override
+    public float getExplosionResistance(BlockState state, BlockGetter level, BlockPos pos, Explosion explosion) {
+        return state.getValue(PEDESTAL) ? 3600000.0F : super.getExplosionResistance(state, level, pos, explosion);
+    }
+
+    @Override
+    public PushReaction getPistonPushReaction(BlockState state) {
+        return state.getValue(PEDESTAL) ? PushReaction.BLOCK : PushReaction.DESTROY;
+    }
+
+    /** El huevo pulido solo se sostiene arriba de su bloque de material puro. */
+    @Override
+    public boolean canSurvive(BlockState state, LevelReader level, BlockPos pos) {
+        return state.getValue(PEDESTAL) || isIncubator(level.getBlockState(pos.below()));
+    }
+
+    /** Si le sacan el bloque de abajo, el huevo pulido se suelta como objeto. */
+    @Override
+    public void neighborChanged(BlockState state, Level level, BlockPos pos, Block block, BlockPos fromPos, boolean moving) {
+        if (!level.isClientSide && !state.getValue(PEDESTAL) && !canSurvive(state, level, pos)) {
+            level.destroyBlock(pos, true);
+        }
     }
 
     @Nullable
@@ -74,11 +118,15 @@ public class CrabEggBlock extends Block implements EntityBlock {
         };
     }
 
-    /** Tocar el huevo tambien lo despierta. */
+    /** Tocar el huevo natural tambien lo despierta; el pulido cuenta cuanto falta para que nazca. */
     @Override
     public InteractionResult use(BlockState state, Level level, BlockPos pos, Player player, InteractionHand hand, BlockHitResult hit) {
         if (level instanceof ServerLevel serverLevel) {
-            awaken(serverLevel, pos, state, player);
+            if (state.getValue(PEDESTAL)) {
+                awaken(serverLevel, pos, state, player);
+            } else if (level.getBlockEntity(pos) instanceof CrabEggBlockEntity egg) {
+                egg.showStatus(player);
+            }
         }
         return InteractionResult.sidedSuccess(level.isClientSide);
     }

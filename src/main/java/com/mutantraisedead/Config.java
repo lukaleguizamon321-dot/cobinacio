@@ -22,6 +22,7 @@ public final class Config {
     public static final ForgeConfigSpec.IntValue GIANT_CRAB_HITS;
     public static final ForgeConfigSpec.IntValue COAL_BOSS_HEALTH;
     public static final ForgeConfigSpec.IntValue BOSS_WAKE_RANGE;
+    public static final ForgeConfigSpec.IntValue EGG_INCUBATION_SECONDS;
     public static final ForgeConfigSpec.IntValue DETECTED_SECONDS;
     public static final ForgeConfigSpec.IntValue DETECTED_RANGE;
     public static final ForgeConfigSpec.IntValue UNLUCKY_SECONDS;
@@ -131,6 +132,9 @@ public final class Config {
         BOSS_WAKE_RANGE = b
                 .comment("A cuantos bloques de distancia del huevo de la guarida se despierta el jefe.")
                 .defineInRange("bossWakeRange", 7, 2, 24);
+        EGG_INCUBATION_SECONDS = b
+                .comment("Segundos que tarda en nacer el cangrejo de un huevo pulido puesto sobre su bloque (600 = 10 minutos). Para probar, bajalo a 10.")
+                .defineInRange("eggIncubationSeconds", 600, 1, 86400);
         DETECTED_SECONDS = b
                 .comment("Cangrejo de redstone: segundos que dura el efecto Detectado (300 = 5 minutos).")
                 .defineInRange("detectedSeconds", 300, 1, 36000);

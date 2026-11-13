@@ -38,6 +38,7 @@ public final class GuardHandler {
     private static final String MARKER_TAG = "mutantraisedead_guard";
     private static final String DATA_OWNER = "mutantraisedead_owner";
     private static final String DATA_EXPIRE = "mutantraisedead_expire";
+    private static final String DATA_PET = "mutantraisedead_pet";
 
     private static final String PLANT_TAG = "mutantraisedead_plant";
     private static final String DATA_PLANT_TARGET = "mutantraisedead_plant_target";
@@ -69,6 +70,25 @@ public final class GuardHandler {
         CompoundTag data = mob.getPersistentData();
         data.putUUID(DATA_OWNER, owner.getUUID());
         data.putLong(DATA_EXPIRE, expireGameTime);
+    }
+
+    /**
+     * Marca a un cangrejo nacido de un huevo como aliado permanente de su dueno: protege igual que un guardian,
+     * pero no desaparece con el tiempo ni cuando el dueno se desconecta (se queda esperandolo).
+     */
+    public static void markPet(Mob mob, Entity owner) {
+        mark(mob, owner, Long.MAX_VALUE);
+        mob.getPersistentData().putBoolean(DATA_PET, true);
+        mob.setPersistenceRequired();
+    }
+
+    private static boolean isPet(Entity entity) {
+        return entity.getPersistentData().getBoolean(DATA_PET);
+    }
+
+    /** Dueno de un aliado marcado (o null). */
+    public static UUID ownerIdOf(Entity entity) {
+        return ownerOf(entity);
     }
 
     // ------------------------------------------------------------------
@@ -192,6 +212,13 @@ public final class GuardHandler {
         long expire = mob.getPersistentData().getLong(DATA_EXPIRE);
         ServerPlayer owner = ownerId == null ? null : level.getServer().getPlayerList().getPlayer(ownerId);
         if (owner == null || !owner.isAlive() || owner.level() != level || level.getGameTime() >= expire) {
+            if (isPet(mob)) {
+                // un cangrejo criado no desaparece: se queda quieto esperando a su dueno
+                if (mob.getTarget() != null && !mob.getTarget().isAlive()) {
+                    mob.setTarget(null);
+                }
+                return;
+            }
             vanish(level, mob);
             return;
         }

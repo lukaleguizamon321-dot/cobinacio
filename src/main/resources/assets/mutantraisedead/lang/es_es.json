@@ -85,5 +85,12 @@
   "tooltip.mutantraisedead.doble_almacen.stored": "Guardado: %s pilas",
   "entity.mutantraisedead.coal_crab_boss": "Cangrejo Titán de Carbón",
   "item.mutantraisedead.coal_crab_boss_spawn_egg": "Huevo de aparición de Cangrejo Titán de Carbón",
-  "block.mutantraisedead.coal_crab_egg": "Huevo del Cangrejo Titán de Carbón"
+  "block.mutantraisedead.coal_crab_egg": "Huevo de Cangrejo de Carbón pulido",
+  "item.mutantraisedead.coal_crab_egg.tip": "Ponelo arriba de un bloque de carbón y esperá 10 minutos: nace un cangrejo chico que te obedece.",
+  "item.mutantraisedead.coal_crab_egg_rough": "Huevo de Cangrejo de Carbón con imperfecciones",
+  "item.mutantraisedead.coal_crab_egg_rough.tip": "Pulilo en una piedra de afilar.",
+  "message.mutantraisedead.egg_needs_block": "Este huevo solo incuba arriba de un bloque de carbón.",
+  "message.mutantraisedead.egg_incubating": "Incubando... faltan %s:%s",
+  "message.mutantraisedead.egg_ready": "El huevo está por nacer: acercate a menos de 5 bloques.",
+  "message.mutantraisedead.egg_hatched": "¡Nació un cangrejo de carbón! Ahora te protege."
 }

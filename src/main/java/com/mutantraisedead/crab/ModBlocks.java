@@ -64,18 +64,26 @@ public final class ModBlocks {
     }
 
     /**
-     * Huevo del jefe de carbon (v1.12): descansa sobre el pedestal del centro de la guarida. No se puede picar en
-     * supervivencia (dureza -1); en creativo se puede poner y sacar para probar.
+     * Huevo de Cangrejo de Carbon (v1.12, reformado en v1.14). Hay dos clases:
+     *  - el de la guarida (propiedad pedestal = true): duerme sobre el pedestal, no se rompe en supervivencia y
+     *    cuando alguien se acerca despierta al jefe;
+     *  - el pulido, puesto por un jugador sobre un bloque de carbon: incuba 10 minutos y nace un cangrejo chico aliado.
      */
     public static final RegistryObject<Block> COAL_EGG = BLOCKS.register("coal_crab_egg", () -> new CrabEggBlock(
             BlockBehaviour.Properties.of()
                     .mapColor(MapColor.COLOR_BLACK)
-                    .strength(-1.0F, 3600000.0F)
+                    .strength(0.8F, 3.0F)
                     .sound(SoundType.STONE)
                     .lightLevel(state -> 5)
                     .noOcclusion()));
+    /** Huevo pulido (el que se coloca para incubar). */
     public static final RegistryObject<Item> COAL_EGG_ITEM =
-            ITEMS.register("coal_crab_egg", () -> new BlockItem(COAL_EGG.get(), new Item.Properties().rarity(Rarity.EPIC)));
+            ITEMS.register("coal_crab_egg", () -> new PolishedEggItem(COAL_EGG.get(),
+                    new Item.Properties().rarity(Rarity.EPIC).stacksTo(1).fireResistant()));
+    /** Huevo con imperfecciones: lo suelta el jefe; se pule en la piedra de afilar. */
+    public static final RegistryObject<Item> COAL_EGG_ROUGH =
+            ITEMS.register("coal_crab_egg_rough", () -> new RoughEggItem(
+                    new Item.Properties().rarity(Rarity.RARE).stacksTo(1).fireResistant()));
     public static final RegistryObject<BlockEntityType<CrabEggBlockEntity>> CRAB_EGG_ENTITY =
             BLOCK_ENTITIES.register("crab_egg", () -> BlockEntityType.Builder.of(CrabEggBlockEntity::new, COAL_EGG.get()).build(null));
 

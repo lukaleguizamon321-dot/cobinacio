@@ -34,7 +34,7 @@ public final class LairCommand {
         ServerLevel level = source.getLevel();
         BlockPos pos = player.blockPosition();
 
-        // Que entre en la altura del mundo (el piso queda 2 bloques debajo, el techo 10 arriba).
+        // Que entre en la altura del mundo (el piso queda 2 bloques debajo, el techo 15 arriba).
         int minY = level.getMinBuildHeight() + 4;
         int maxY = level.getMaxBuildHeight() - LairFeature.HEIGHT - 4;
         BlockPos center = new BlockPos(pos.getX(), Mth.clamp(pos.getY(), minY, maxY), pos.getZ());

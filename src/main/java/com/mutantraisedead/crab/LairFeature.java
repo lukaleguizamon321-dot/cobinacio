@@ -14,23 +14,31 @@ import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConf
 /**
  * Guarida de los cangrejos: una sala cilindrica cerrada, enterrada en las cuevas como un dungeon.
  *
- * Medidas: radio interior ~10 bloques, 9 bloques de alto (del suelo al techo), pared de 2 bloques.
- * En el centro hay un pedestal (la "zona central" para usar mas adelante) y en la pared hay un nido
+ * Medidas (v1.14): radio interior ~15,5 bloques, 14 bloques de alto (del suelo al techo), pared de 2 bloques.
+ * Es grande a proposito: el jefe de carbon mide 6 de alto y con las patas abiertas ocupa unos 12 de ancho,
+ * y la pelea necesita lugar para correr y esquivar la embestida.
+ * En el centro hay un pedestal con el huevo del jefe y en la pared hay un nido
  * (cubo de 2x2x2) para cada material: carbon, hierro, cobre, oro, lapislazuli, amatista, redstone,
  * diamante y esmeralda. Entre los nidos hay pilares con un farol arriba.
  *
- * Tiene una puerta de 3 de ancho por 4 de alto en uno de los cuatro lados; del otro lado de la pared
+ * Tiene una puerta de 5 de ancho por 6 de alto en uno de los cuatro lados; del otro lado de la pared
  * hay roca, asi que hay que cavar (o cruzar una cueva) para llegar a ella.
  * El origen (context.origin()) es el centro; el primer bloque de aire del interior esta a la altura del origen.
+ *
+ * Al generarse con el mundo, el centro se mueve al medio del chunk: Minecraft solo deja escribir bloques hasta
+ * 16 bloques fuera del chunk que se esta generando, y la sala llega a 17,5 desde el centro.
  */
 public class LairFeature extends Feature<NoneFeatureConfiguration> {
     /** Alto del interior en bloques. */
-    public static final int HEIGHT = 9;
-    /** Distancia al cuadrado (dx*dx + dz*dz) hasta donde llega el interior: radio ~10,5. */
-    private static final int INTERIOR_D2 = 110;
-    /** Hasta donde llega la pared (radio ~12,5). */
-    private static final int SHELL_D2 = 156;
-    private static final int REACH = 13;
+    public static final int HEIGHT = 14;
+    /** Distancia al cuadrado (dx*dx + dz*dz) hasta donde llega el interior: radio ~15,5. */
+    private static final int INTERIOR_D2 = 240;
+    /** Hasta donde llega la pared (radio ~17,5). */
+    private static final int SHELL_D2 = 306;
+    private static final int REACH = 18;
+    /** Radio al que quedan los nidos y los pilares (pegados a la pared). */
+    private static final double NEST_RADIUS = 15.4D;
+    private static final double PILLAR_RADIUS = 14.3D;
 
     /** Orden de los nidos alrededor de la sala. */
     private static final GrottolVariant[] NEST_ORDER = {
@@ -50,7 +58,10 @@ public class LairFeature extends Feature<NoneFeatureConfiguration> {
 
     @Override
     public boolean place(FeaturePlaceContext<NoneFeatureConfiguration> context) {
-        return build(context.level(), context.origin(), context.random(), false);
+        BlockPos o = context.origin();
+        // al medio del chunk: asi la sala (hasta 17,5 bloques) nunca pasa del limite de escritura (16 bloques fuera del chunk)
+        BlockPos center = new BlockPos((o.getX() >> 4 << 4) + 8, o.getY(), (o.getZ() >> 4 << 4) + 8);
+        return build(context.level(), center, context.random(), false);
     }
 
     private static Palette palette(boolean deep) {
@@ -130,18 +141,18 @@ public class LairFeature extends Feature<NoneFeatureConfiguration> {
         // El huevo del jefe de carbon va arriba del pedestal; al acercarte despierta (ver CrabEggBlock)
         set(level, cx, y0 + 3, cz, ModBlocks.COAL_EGG.get().defaultBlockState().setValue(CrabEggBlock.PEDESTAL, true));
 
-        // 3) Puerta de 3x4 hacia uno de los cuatro lados (atraviesa la pared)
+        // 3) Puerta de 5x6 hacia uno de los cuatro lados (atraviesa la pared)
         int doorQuarter = random.nextInt(4);
         int ux = doorQuarter == 0 ? 1 : doorQuarter == 1 ? -1 : 0;
         int uz = doorQuarter == 2 ? 1 : doorQuarter == 3 ? -1 : 0;
-        for (int t = 9; t <= REACH; t++) {
-            for (int lateral = -1; lateral <= 1; lateral++) {
+        for (int t = 14; t <= REACH; t++) {
+            for (int lateral = -2; lateral <= 2; lateral++) {
                 int dx = ux * t - uz * lateral;
                 int dz = uz * t + ux * lateral;
                 if (dx * dx + dz * dz > SHELL_D2) {
                     continue;
                 }
-                for (int dy = 0; dy < 4; dy++) {
+                for (int dy = 0; dy < 6; dy++) {
                     set(level, cx + dx, y0 + dy, cz + dz, Blocks.AIR.defaultBlockState());
                 }
             }
@@ -156,8 +167,8 @@ public class LairFeature extends Feature<NoneFeatureConfiguration> {
                     : ModBlocks.lairNest(variant).defaultBlockState();
             double nestAngle = doorAngle + Math.toRadians(20 + 40 * k);
             // el cubo de 2x2x2 queda pegado a la pared, un poco hacia adentro para verse
-            int ox = cx + (int) Math.round(Math.cos(nestAngle) * 10.4D - 0.5D);
-            int oz = cz + (int) Math.round(Math.sin(nestAngle) * 10.4D - 0.5D);
+            int ox = cx + (int) Math.round(Math.cos(nestAngle) * NEST_RADIUS - 0.5D);
+            int oz = cz + (int) Math.round(Math.sin(nestAngle) * NEST_RADIUS - 0.5D);
             for (int a = 0; a < 2; a++) {
                 for (int b = 0; b < 2; b++) {
                     for (int c = 0; c < 2; c++) {
@@ -170,8 +181,8 @@ public class LairFeature extends Feature<NoneFeatureConfiguration> {
                 continue; // ahi esta la puerta
             }
             double pillarAngle = nestAngle + Math.toRadians(20);
-            int px = cx + (int) Math.round(Math.cos(pillarAngle) * 9.3D);
-            int pz = cz + (int) Math.round(Math.sin(pillarAngle) * 9.3D);
+            int px = cx + (int) Math.round(Math.cos(pillarAngle) * PILLAR_RADIUS);
+            int pz = cz + (int) Math.round(Math.sin(pillarAngle) * PILLAR_RADIUS);
             for (int dy = 0; dy < HEIGHT - 2; dy++) {
                 set(level, px, y0 + dy, pz, dy == 0 || dy == HEIGHT - 3 ? p.chiseled() : p.pillar());
             }
@@ -184,7 +195,7 @@ public class LairFeature extends Feature<NoneFeatureConfiguration> {
     private static boolean isGoodSpot(WorldGenLevel level, BlockPos origin) {
         int y0 = origin.getY();
         int needed = y0 + HEIGHT + 5;
-        int[][] probes = {{0, 0}, {12, 0}, {-12, 0}, {0, 12}, {0, -12}, {8, 8}, {8, -8}, {-8, 8}, {-8, -8}};
+        int[][] probes = {{0, 0}, {16, 0}, {-16, 0}, {0, 16}, {0, -16}, {11, 11}, {11, -11}, {-11, 11}, {-11, -11}};
         for (int[] probe : probes) {
             if (level.getHeight(Heightmap.Types.WORLD_SURFACE_WG, origin.getX() + probe[0], origin.getZ() + probe[1]) < needed) {
                 return false;
@@ -228,8 +239,8 @@ public class LairFeature extends Feature<NoneFeatureConfiguration> {
     }
 
     private static BlockState floor(Palette p, int d2, RandomSource random) {
-        if (d2 <= 49) {
-            return d2 >= 20 && d2 <= 30 ? p.ring() : p.inner();
+        if (d2 <= 110) {
+            return d2 >= 45 && d2 <= 68 ? p.ring() : p.inner();
         }
         return wall(p, random);
     }

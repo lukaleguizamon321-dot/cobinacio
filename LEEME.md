@@ -152,7 +152,7 @@ Los pergaminos para probar están en la pestaña **Cobinatio** del creativo.
 
 Una estructura subterránea nueva, como las mazmorras: se genera sola, enterrada entre las alturas -50 y 30, en cualquier bioma del mundo normal (no aparece bajo agua ni lava, y es bastante rara).
 
-- **Zona central**: sala redonda (cilindro) de **radio 10 y 9 bloques de alto**, con piso en anillos y paredes de ladrillo de piedra (algunos con musgo o agrietados) si la guarida está por encima de Y=0; por debajo de Y=0 es de ladrillo de pizarra profunda y los faroles son de almas.
+- **Zona central**: sala redonda (cilindro) de **radio 15 y 14 bloques de alto** (en la v1.9 era de radio 10 y 9 de alto; desde la v1.14 es más grande, ver más abajo), con piso en anillos y paredes de ladrillo de piedra (algunos con musgo o agrietados) si la guarida está por encima de Y=0; por debajo de Y=0 es de ladrillo de pizarra profunda y los faroles son de almas.
 - **Pedestal** en el medio de la sala. Por ahora no hace nada; queda reservado para lo que sigue (jefes y huevos).
 - **9 nidos pegados a la pared**, uno por cada cangrejo, en este orden: carbón, hierro, cobre, oro, lapislázuli, amatista, redstone, diamante y esmeralda. Son cubos de 2x2x2 que parecen mena de ese material. Entre nido y nido hay un **pilar con una linterna**.
 - **Puerta** de 3x4 en uno de los cuatro lados (norte, sur, este u oeste); de afuera hay que cavar o cruzar una cueva para llegar a ella.
@@ -193,12 +193,47 @@ En el centro de cada guarida, sobre el pedestal, ahora hay un **huevo**. Mientra
   3. **Llamarada:** prepara el fuego y escupe un cono de llamas hacia adelante que va girando despacio hacia vos. Se esquiva corriendo hacia un costado. Quema a quien alcance.
 - **Furioso:** con menos de la mitad de vida espera menos entre ataque y ataque, y la embestida es más rápida.
 - **No le hace daño el fuego ni la caída.** A diferencia de los cangrejos chicos, a este se lo puede matar con cualquier arma o hechizo, no hace falta un pico.
-- **Botín:** al morir suelta **bloques de carbón** (de 12 a 24, más con Saqueo) y experiencia. Más adelante hacemos el huevo y el resto del botín.
-- **El huevo:** en supervivencia no se puede picar (si no, te saltabas al jefe). En el modo creativo está en la pestaña Cobinatio para ponerlo donde quieras (suelto, el jefe aparece donde estaba el huevo). También hay un huevo de aparición del jefe para probarlo.
+- **Botín:** al morir suelta **bloques de carbón** (de 12 a 24, más con Saqueo), experiencia y, desde la v1.14, el **Huevo de Cangrejo de Carbón con imperfecciones** (siempre uno; ver la v1.14).
+- **El huevo de la guarida:** en supervivencia no se puede picar (si no, te saltabas al jefe). Para probar el jefe en creativo usá el huevo de aparición o `/cobinatio guarida`. (Desde la v1.14 un huevo puesto a mano ya no invoca al jefe, ver abajo.)
 - **Para probarlo:** `/cobinatio guarida` crea una guarida y te deja adentro, lejos del huevo. Caminá hacia el pedestal del centro para despertar al jefe. El alcance se cambia con `bossWakeRange`.
-- **Modelo provisorio:** por ahora usa el cangrejo de carbón común, agrandado y estirado hasta los 6 bloques de alto, por eso se ve alargado. La caja de golpes y el modelo miden lo mismo. Cuando tengas el modelo propio en Blockbench lo cambiamos.
+- **Modelo:** desde la v1.13.0 usa tu modelo propio (ver más abajo).
 - **El huevo (v1.12.1):** ya usa tu modelo y tu textura de Blockbench (`models/block/coal_crab_egg.json` y `textures/block/coal_crab_egg.png`), y tu dibujo como ícono en el inventario (`textures/item/coal_crab_egg.png`). La caja de golpes del huevo mide lo mismo que el modelo (8 de ancho y 11 de alto).
 - Es el primer jefe; los de los otros materiales se hacen después con esta misma base.
 
-Qué viene después (todavía NO está): los jefes de los demás cangrejos, el huevo de cangrejo que se consigue y da un cangrejo aliado, y el resto del botín del jefe de carbón.
+## v1.13.0 - El jefe ya tiene su modelo de Blockbench
+
+El Cangrejo Titán de Carbón ahora se ve con **tu modelo y tu textura** (`boss.bbmodel`): caparazón de cubos de carbón, cuerpo marrón con ojos rojos, 4 patas grandes y 2 pinzas enormes.
+
+- **Tamaño:** el modelo, tal como lo hiciste, mide 5,25 bloques de alto (del suelo al techo del caparazón). Lo agrandé parejo **1,14 veces** para que mida **6 bloques de alto**. El caparazón queda de unos 4,7 de ancho y, con las patas abiertas, el bicho se ve de unos 12 bloques de punta a punta. La **caja de golpes** sigue siendo de **3 de ancho x 6 de alto** (lo que se golpea es el cuerpo del centro; las patas y las pinzas son solo visuales). Entraba justo en la sala de la v1.9 (radio de 10 y 9 de alto); por eso en la v1.14 la guarida es más grande. Si lo querés más grande o más chico, se cambia un solo número (`SCALE` en `CoalCrabBossRenderer.java`); si querés la caja más ancha, se cambia el `sized(3.0F, 6.0F)` del jefe en `ModEntities.java`.
+- **Se mueve igual que antes:** las 4 patas caminan en diagonal, las pinzas se levantan al rugir y al lanzar fuego, se abren al prepararse para la embestida, se juntan al embestir y caen cuando se aturde; el caparazón tiembla. Al despertar sale del suelo.
+- **Las bolas de fuego y la llamarada** ahora salen de la boca del modelo (2,6 bloques adelante y 3,9 de alto).
+- **Textura:** `textures/entity/coal_crab_boss.png` (512x512) es la primera que me mandaste ("textura para el boss de carbón", negra con grietas y ojos naranjas). Encaja exacto con las caras del modelo. La textura de la segunda versión del modelo (la de colores pastel a medio pintar) no se usa.
+- **Cosas del modelo que ajusté:** (1) un cubo suelto de color celeste que estaba **oculto** en el modelo (a un costado del caparazón) no se incluye, igual que en Blockbench. (2) Las caras que quedan pegadas entre cubos (tapadas por dentro) se sacan, para que el modelo sea más liviano. (3) Las patas y las pinzas de tu modelo estaban un poco por debajo del suelo (las puntas de las pinzas, unos 5 píxeles); las pinzas en reposo se suben un poquito para no atravesar el piso.
+
+## v1.14.0 - Guarida más grande y el huevo que nace
+
+**1) La guarida es más grande.** El jefe no entraba bien en la sala, así que ahora es mucho más amplia:
+- Sala redonda de **radio 15 y 14 bloques de alto** (antes 10 y 9). Puerta de 5 de ancho por 6 de alto. Los nidos y los pilares con farol quedaron pegados a la pared nueva, y el piso tiene un círculo central más grande con el pedestal en el medio.
+- Al generarse con el mundo, el centro de la sala queda en el medio del chunk (Minecraft solo deja construir hasta 16 bloques fuera del chunk y la sala llega a 17,5 desde el centro).
+- Las guaridas que ya estaban en tu mundo siguen siendo chicas; solo las nuevas (o las del comando `/cobinatio guarida`) salen grandes. Para ver una grande, creá un mundo nuevo o usá el comando.
+
+**2) El jefe suelta el huevo.** Al morir, además de los bloques de carbón, suelta siempre el **Huevo de Cangrejo de Carbón con imperfecciones** (usa el dibujo que hiciste). Ese huevo no se puede poner todavía: hay que pulirlo.
+
+**3) Piedra de afilar.** Poné el huevo con imperfecciones **solo** en la piedra de afilar (en cualquiera de las dos ranuras, la otra vacía) y sale el **Huevo de Cangrejo de Carbón pulido** (sin imperfecciones; le armé un dibujo liso a partir del tuyo, si querés cambiarlo es `textures/item/coal_crab_egg.png`), más un poquito de experiencia.
+
+**4) Incubar.** El huevo pulido solo se puede poner **arriba de un bloque de carbón** (si lo intentás en otro lado, avisa y no se coloca). Si le sacás el bloque de abajo, se suelta como objeto.
+- Tarda **10 minutos** en incubar (cuenta mientras el lugar esté cargado, o sea, cerca de algún jugador). Se cambia con `eggIncubationSeconds` en el config (para probar poné 10).
+- Mientras incuba suelta chispitas. Con **clic derecho** te dice cuánto falta.
+- Cuando se cumple el tiempo, espera a que haya un jugador a **menos de 5 bloques**: el **primero** que esté cerca es el **dueño**. El huevo desaparece y nace un **cangrejo de carbón chico aliado**.
+- El cangrejo aliado **no desaparece** (a diferencia de los invocados con el hechizo): te sigue, te protege tirando bolas de fuego a los monstruos hostiles, nadie lo puede lastimar a propósito ni vos ni otros jugadores, no suelta botín y si te desconectás se queda esperándote. Es la versión chica (20 de vida).
+- Puede romperse con la mano (devuelve el huevo pulido).
+
+**5) Huevos naturales vs. huevos puestos.** Solo el huevo **natural** del pedestal de la guarida invoca al jefe (se acerca un jugador o lo toca y despierta). Un huevo puesto por un jugador **nunca** invoca al jefe: solo incuba el cangrejo chico.
+
+Cosas a tener en cuenta:
+- Por ahora está solo el huevo de **carbón**; los de los otros materiales (cada uno sobre su bloque: hierro, oro, cobre, etc.) vendrán con los otros jefes.
+- Los huevos de la v1.12/v1.13 que ya estaban puestos en la guarida siguen funcionando igual (son los naturales).
+- Si el huevo suelto que ponías en creativo para invocar al jefe te servía para probar, usá el huevo de aparición del jefe.
+
+Qué viene después (todavía NO está): los jefes de los demás cangrejos (cada uno con su huevo, su bloque de incubación y su botín) y el resto del botín del jefe de carbón.
 

@@ -11,6 +11,9 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.NbtUtils;
 import net.minecraft.nbt.Tag;
+import net.minecraft.network.syncher.EntityDataAccessor;
+import net.minecraft.network.syncher.EntityDataSerializers;
+import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
@@ -19,11 +22,19 @@ import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.tags.BlockTags;
 import net.minecraft.tags.DamageTypeTags;
+import net.minecraft.util.Mth;
+import net.minecraft.world.Container;
+import net.minecraft.world.Containers;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.SimpleContainer;
+import net.minecraft.world.SimpleMenuProvider;
 import net.minecraft.world.damagesource.DamageSource;
 import net.minecraft.world.effect.MobEffectInstance;
 import net.minecraft.world.effect.MobEffects;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.ExperienceOrb;
 import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.LightningBolt;
 import net.minecraft.world.entity.Mob;
@@ -43,10 +54,14 @@ import net.minecraft.world.entity.monster.Enemy;
 import net.minecraft.world.entity.npc.Villager;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.entity.projectile.SmallFireball;
+import net.minecraft.world.inventory.ContainerData;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.item.PickaxeItem;
 import net.minecraft.world.item.crafting.Ingredient;
+import net.minecraft.world.item.crafting.RecipeType;
+import net.minecraft.world.item.crafting.SmeltingRecipe;
 import net.minecraft.world.item.enchantment.EnchantmentHelper;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.LevelAccessor;
@@ -55,10 +70,12 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import net.minecraftforge.network.NetworkHooks;
 
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 
@@ -70,8 +87,14 @@ import java.util.UUID;
  *  - cada material tiene una pasiva distinta
  *  - redstone (te marca), diamante (ataca y da mala suerte al morir) y esmeralda (descuento a aldeanos)
  *    no se entierran
+ *  - el cangrejo de carbon criado de un huevo (mascota) puede llevar un horno encima: cocina sin combustible (v1.15)
  */
 public class GrottolVariantEntity extends PathfinderMob {
+    /** Mascota de carbon: lleva la mitad de arriba de un horno sobre el caparazon (se dibuja en CrabFurnaceLayer). */
+    private static final EntityDataAccessor<Boolean> DATA_FURNACE = SynchedEntityData.defineId(GrottolVariantEntity.class, EntityDataSerializers.BOOLEAN);
+    /** true mientras el horno del cangrejo esta cocinando algo (enciende la boca del horno y larga humo). */
+    private static final EntityDataAccessor<Boolean> DATA_COOKING = SynchedEntityData.defineId(GrottolVariantEntity.class, EntityDataSerializers.BOOLEAN);
+
     private final GrottolVariant variant;
 
     private int hitsLeft;
@@ -271,6 +294,201 @@ public class GrottolVariantEntity extends PathfinderMob {
     }
 
     // ------------------------------------------------------------------
+    // Horno del cangrejo de carbon (v1.15): sin ranura de combustible, el cangrejo da el calor
+    // ------------------------------------------------------------------
+
+    /** Ranuras del horno del cangrejo: 0 = lo que se cocina, 1 = resultado. */
+    private final SimpleContainer furnaceInv = new SimpleContainer(2);
+    private int cookTime;
+    private int cookTotal;
+    private float furnaceXp;
+    private boolean furnaceReleased;
+    /** Lo ultimo que se estaba cocinando: si lo cambian a mitad de camino, el progreso arranca de cero. */
+    private Item lastCookItem;
+
+    /** Datos que el menu muestra en pantalla: progreso, tiempo total y si esta cocinando. */
+    public final ContainerData furnaceData = new ContainerData() {
+        @Override
+        public int get(int index) {
+            return switch (index) {
+                case 0 -> cookTime;
+                case 1 -> cookTotal;
+                case 2 -> isCooking() ? 1 : 0;
+                default -> 0;
+            };
+        }
+
+        @Override
+        public void set(int index, int value) {
+        }
+
+        @Override
+        public int getCount() {
+            return 3;
+        }
+    };
+
+    @Override
+    protected void defineSynchedData() {
+        super.defineSynchedData();
+        this.entityData.define(DATA_FURNACE, false);
+        this.entityData.define(DATA_COOKING, false);
+    }
+
+    public boolean hasFurnace() {
+        return this.entityData.get(DATA_FURNACE);
+    }
+
+    public boolean isCooking() {
+        return this.entityData.get(DATA_COOKING);
+    }
+
+    public Container getFurnaceInventory() {
+        return furnaceInv;
+    }
+
+    /** Solo el cangrejo de carbon que nacio de un huevo (mascota) puede llevar horno. */
+    public boolean canCarryFurnace() {
+        return variant == GrottolVariant.COAL && GuardHandler.isPet(this);
+    }
+
+    public boolean isOwnedBy(Player player) {
+        UUID owner = GuardHandler.ownerIdOf(this);
+        return owner != null && owner.equals(player.getUUID());
+    }
+
+    public void installFurnace() {
+        this.entityData.set(DATA_FURNACE, true);
+    }
+
+    /** Clic derecho del dueno: abre el menu del horno (la pantalla es la del horno sin la ranura de combustible). */
+    @Override
+    protected InteractionResult mobInteract(Player player, InteractionHand hand) {
+        if (hasFurnace() && canCarryFurnace()) {
+            if (!level().isClientSide && player instanceof ServerPlayer serverPlayer) {
+                if (isOwnedBy(player)) {
+                    NetworkHooks.openScreen(serverPlayer,
+                            new SimpleMenuProvider((id, inventory, p) -> new CrabFurnaceMenu(id, inventory, this),
+                                    Component.translatable("container.furnace")),
+                            buf -> buf.writeVarInt(getId()));
+                } else {
+                    player.displayClientMessage(Component.translatable("message.mutantraisedead.crab_furnace_not_owner"), true);
+                }
+            }
+            return InteractionResult.sidedSuccess(level().isClientSide);
+        }
+        return super.mobInteract(player, hand);
+    }
+
+    /** Cocina con las recetas de horno, sin combustible, mientras el cangrejo este vivo. */
+    private void tickFurnace(ServerLevel level) {
+        if (!hasFurnace()) {
+            return;
+        }
+        ItemStack input = furnaceInv.getItem(0);
+        Item current = input.isEmpty() ? null : input.getItem();
+        if (current != null && lastCookItem != null && current != lastCookItem) {
+            cookTime = 0;
+        }
+        lastCookItem = current;
+        boolean cooking = false;
+        if (!input.isEmpty()) {
+            SimpleContainer single = new SimpleContainer(input);
+            Optional<SmeltingRecipe> found = level.getRecipeManager().getRecipeFor(RecipeType.SMELTING, single, level);
+            if (found.isPresent()) {
+                SmeltingRecipe recipe = found.get();
+                ItemStack result = recipe.getResultItem(level.registryAccess());
+                ItemStack out = furnaceInv.getItem(1);
+                boolean fits = !result.isEmpty() && (out.isEmpty()
+                        || (ItemStack.isSameItemSameTags(out, result) && out.getCount() + result.getCount() <= out.getMaxStackSize()));
+                if (fits) {
+                    cooking = true;
+                    cookTotal = recipe.getCookingTime();
+                    cookTime++;
+                    if (cookTime >= cookTotal) {
+                        cookTime = 0;
+                        ItemStack made = recipe.assemble(single, level.registryAccess());
+                        if (out.isEmpty()) {
+                            furnaceInv.setItem(1, made.copy());
+                        } else {
+                            out.grow(made.getCount());
+                            furnaceInv.setChanged();
+                        }
+                        input.shrink(1);
+                        if (input.isEmpty()) {
+                            furnaceInv.setItem(0, ItemStack.EMPTY);
+                        }
+                        furnaceXp += recipe.getExperience();
+                        playSound(SoundEvents.FURNACE_FIRE_CRACKLE, 0.6F, 1.2F);
+                    }
+                }
+            }
+        }
+        if (!cooking) {
+            // como el horno comun: si se frena, el progreso baja de a poco
+            cookTime = Mth.clamp(cookTime - 2, 0, Math.max(cookTotal, 0));
+            if (input.isEmpty()) {
+                cookTime = 0;
+            }
+        } else if (tickCount % 80 == 0) {
+            playSound(SoundEvents.FURNACE_FIRE_CRACKLE, 0.4F, 1.0F);
+        }
+        if (cooking != isCooking()) {
+            this.entityData.set(DATA_COOKING, cooking);
+        }
+    }
+
+    /** Se llama cuando el jugador saca algo del resultado: le da la experiencia acumulada. */
+    public void releaseFurnaceXp(ServerPlayer player) {
+        int whole = (int) furnaceXp;
+        float fraction = furnaceXp - whole;
+        if (fraction > 0.0F && random.nextFloat() < fraction) {
+            whole++;
+        }
+        furnaceXp = 0.0F;
+        if (whole > 0 && player.level() instanceof ServerLevel serverLevel) {
+            ExperienceOrb.award(serverLevel, player.position(), whole);
+        }
+    }
+
+    /** Al morir suelta el horno, lo que tenia adentro y la experiencia (el botin de los aliados esta anulado, por eso se hace aca). */
+    private void releaseFurnace() {
+        if (furnaceReleased || !hasFurnace() || !(level() instanceof ServerLevel serverLevel)) {
+            return;
+        }
+        furnaceReleased = true;
+        Containers.dropItemStack(serverLevel, getX(), getY() + 0.5D, getZ(), new ItemStack(Items.FURNACE));
+        for (int i = 0; i < furnaceInv.getContainerSize(); i++) {
+            ItemStack stack = furnaceInv.getItem(i);
+            if (!stack.isEmpty()) {
+                Containers.dropItemStack(serverLevel, getX(), getY() + 0.5D, getZ(), stack);
+                furnaceInv.setItem(i, ItemStack.EMPTY);
+            }
+        }
+        if (furnaceXp >= 1.0F) {
+            ExperienceOrb.award(serverLevel, position(), (int) furnaceXp);
+        }
+        furnaceXp = 0.0F;
+    }
+
+    /** Humo por arriba del horno y chispas por la boca mientras cocina (solo cliente). */
+    private void furnaceClientParticles() {
+        if (!hasFurnace() || !isCooking() || !isAlive()) {
+            return;
+        }
+        double yaw = Math.toRadians(this.yBodyRot);
+        double fx = -Math.sin(yaw);
+        double fz = Math.cos(yaw);
+        if (random.nextInt(5) == 0) {
+            level().addParticle(ParticleTypes.SMOKE, getX() - fx * 0.3D + (random.nextDouble() - 0.5D) * 0.2D,
+                    getY() + 1.2D, getZ() - fz * 0.3D + (random.nextDouble() - 0.5D) * 0.2D, 0.0D, 0.03D, 0.0D);
+        }
+        if (random.nextInt(8) == 0) {
+            level().addParticle(ParticleTypes.FLAME, getX() + fx * 0.25D, getY() + 0.95D, getZ() + fz * 0.25D, 0.0D, 0.0D, 0.0D);
+        }
+    }
+
+    // ------------------------------------------------------------------
     // Sonidos
     // ------------------------------------------------------------------
 
@@ -409,6 +627,9 @@ public class GrottolVariantEntity extends PathfinderMob {
     /** Pasivas y logros al morir: diamante da Desafortunado, lapis y carbon dan logros. */
     @Override
     public void die(DamageSource source) {
+        if (!level().isClientSide) {
+            releaseFurnace();
+        }
         if (!level().isClientSide && source.getEntity() instanceof ServerPlayer killer) {
             switch (variant) {
                 case DIAMOND -> {
@@ -453,6 +674,21 @@ public class GrottolVariantEntity extends PathfinderMob {
             list.add(NbtUtils.createUUID(id));
         }
         tag.put("DiscountedVillagers", list);
+        tag.putBoolean("HasFurnace", hasFurnace());
+        ListTag items = new ListTag();
+        for (int i = 0; i < furnaceInv.getContainerSize(); i++) {
+            ItemStack stack = furnaceInv.getItem(i);
+            if (!stack.isEmpty()) {
+                CompoundTag entry = new CompoundTag();
+                entry.putByte("Slot", (byte) i);
+                stack.save(entry);
+                items.add(entry);
+            }
+        }
+        tag.put("FurnaceItems", items);
+        tag.putInt("FurnaceCookTime", cookTime);
+        tag.putInt("FurnaceCookTotal", cookTotal);
+        tag.putFloat("FurnaceXp", furnaceXp);
     }
 
     @Override
@@ -462,6 +698,18 @@ public class GrottolVariantEntity extends PathfinderMob {
         for (Tag entry : tag.getList("DiscountedVillagers", Tag.TAG_INT_ARRAY)) {
             discounted.add(NbtUtils.loadUUID(entry));
         }
+        this.entityData.set(DATA_FURNACE, tag.getBoolean("HasFurnace"));
+        furnaceInv.clearContent();
+        for (Tag entry : tag.getList("FurnaceItems", Tag.TAG_COMPOUND)) {
+            CompoundTag item = (CompoundTag) entry;
+            int slot = item.getByte("Slot") & 255;
+            if (slot < furnaceInv.getContainerSize()) {
+                furnaceInv.setItem(slot, ItemStack.of(item));
+            }
+        }
+        cookTime = tag.getInt("FurnaceCookTime");
+        cookTotal = tag.getInt("FurnaceCookTotal");
+        furnaceXp = tag.getFloat("FurnaceXp");
     }
 
     @Override
@@ -488,6 +736,7 @@ public class GrottolVariantEntity extends PathfinderMob {
         super.tick();
         if (level().isClientSide) {
             clientParticles();
+            furnaceClientParticles();
             if (clawTicks > 0) {
                 clawTicks--;
             }
@@ -499,6 +748,7 @@ public class GrottolVariantEntity extends PathfinderMob {
         if (!(level() instanceof ServerLevel serverLevel)) {
             return;
         }
+        tickFurnace(serverLevel);
         if (isSummoned()) {
             tickSummoned(serverLevel);
             return;

@@ -144,6 +144,22 @@ public class GrottolVariantModel extends EntityModel<GrottolVariantEntity> {
         }
     }
 
+    /**
+     * Deja el PoseStack en el sistema de la pieza "shell" (caparazon), con el rebote y el temblor de ese momento.
+     * Lo usa CrabFurnaceLayer para que el horno acompane al caparazon.
+     */
+    public void applyShellPose(PoseStack poseStack) {
+        int i = indexOf("shell");
+        Group g = groups[i];
+        poseStack.translate(0.0F, sink - bob, 0.0F);
+        float pvx = -g.px * UNIT;
+        float pvy = FLOOR - g.py * UNIT;
+        float pvz = g.pz * UNIT;
+        poseStack.translate(pvx, pvy, pvz);
+        poseStack.mulPose(new Quaternionf().rotationZYX(rz[i], -ry[i], -rx[i]));
+        poseStack.translate(-pvx, -pvy, -pvz);
+    }
+
     @Override
     public void renderToBuffer(PoseStack poseStack, VertexConsumer buffer, int packedLight, int packedOverlay, float red, float green, float blue, float alpha) {
         for (int i = 0; i < groups.length; i++) {

@@ -82,7 +82,8 @@ public final class GuardHandler {
         mob.setPersistenceRequired();
     }
 
-    private static boolean isPet(Entity entity) {
+    /** true si es un cangrejo criado de un huevo (aliado permanente de su dueno). */
+    public static boolean isPet(Entity entity) {
         return entity.getPersistentData().getBoolean(DATA_PET);
     }
 

@@ -1,4 +1,4 @@
-# Cobinatio v1.12.1 (Forge 1.20.1)
+# Cobinatio v1.15.0 (Forge 1.20.1)
 
 Combina hechizos de Iron's Spells 'n Spellbooks con mobs de otros mods.
 
@@ -237,3 +237,29 @@ Cosas a tener en cuenta:
 
 Qué viene después (todavía NO está): los jefes de los demás cangrejos (cada uno con su huevo, su bloque de incubación y su botín) y el resto del botín del jefe de carbón.
 
+## v1.15.0 - El cangrejo de carbón con horno
+
+La mascota de carbón (la que nace del huevo pulido) ahora puede llevar un **horno encima** y cocinar o fundir cosas **sin combustible**: el cangrejo pone el calor.
+
+**Cómo se usa**
+1. Tené un **horno** en la mano (el bloque común) y hacele **clic izquierdo** (un golpe) a tu cangrejo de carbón mascota. El golpe **no le hace daño**: el horno se queda puesto encima del caparazón (se gasta uno, salvo en creativo). Solo el **dueño** puede ponerlo, y solo una vez por cangrejo.
+2. **Clic derecho** al cangrejo: se abre la ventana del horno, **sin la ranura del carbón** (se tapa y queda solo la llama, que se prende mientras cocina). Quedan la ranura de arriba (lo que querés cocinar) y la de resultado.
+3. Cocina con **todas las recetas del horno común** (minerales en bruto, comida, arena a vidrio, etc.), a la misma velocidad que un horno normal, mientras el cangrejo esté vivo y cargado en el mundo. Aunque cierres la ventana sigue cocinando. Al sacar el resultado te da la **experiencia** acumulada, como en un horno.
+4. Con el shift-clic las cosas van solas a la ranura de arriba (si se pueden cocinar) o a tu mochila.
+
+**Cómo se ve**
+- Se dibuja **solo la mitad de arriba del horno** (la parte de la boca, sin el cenicero de abajo), apoyada sobre el caparazón y **inclinada igual que la tapa del caparazón** (15 grados), de modo que queda pegada. Se mueve con el caparazón cuando respira o camina.
+- Usa las texturas del **horno del juego** (si tenés un paquete de texturas, se ve con las tuyas), y la ventana también usa el dibujo del horno de tu paquete.
+- Mientras cocina, la boca del horno se ve **prendida**, larga **humo** por arriba y chispas por adelante, y se oye el crepitar del fuego.
+
+**Si el cangrejo muere**
+- Suelta el **horno**, lo que tenía adentro (lo que se cocinaba y el resultado) y la experiencia que había juntado. (Los cangrejos aliados no sueltan botín, por eso lo hace el propio horno.)
+- El horno **se guarda** con el cangrejo: si salís del mundo y volvés, sigue puesto con todo lo que tenía adentro.
+
+**Cosas a tener en cuenta**
+- Solo la **mascota de carbón del huevo** puede llevar horno (no los cangrejos de carbón salvajes, ni los invocados con el hechizo).
+- Por ahora el horno **no se puede sacar** sin que el cangrejo muera.
+- No lleva el librito verde de recetas del horno común (no hacía falta); el resto de la ventana es igual.
+- Es el **horno común**: el alto horno y el ahumador (que son otros bloques) no se pueden poner todavía.
+
+Archivos nuevos: `crab/CrabFurnaceLayer.java` (dibujo), `crab/CrabFurnaceMenu.java` y `crab/CrabFurnaceScreen.java` (ventana), `crab/CrabFurnaceEvents.java` (poner el horno con el golpe), `crab/CrabFurnaceClient.java` y `crab/ModMenus.java` (registro). Si querés mover el horno o cambiarle el tamaño, los números están al principio de `CrabFurnaceLayer.java` (`CX`, `CY`, `CZ`, `HALF`, `HEIGHT`).

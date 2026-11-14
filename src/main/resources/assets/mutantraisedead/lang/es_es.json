@@ -92,5 +92,8 @@
   "message.mutantraisedead.egg_needs_block": "Este huevo solo incuba arriba de un bloque de carbón.",
   "message.mutantraisedead.egg_incubating": "Incubando... faltan %s:%s",
   "message.mutantraisedead.egg_ready": "El huevo está por nacer: acercate a menos de 5 bloques.",
-  "message.mutantraisedead.egg_hatched": "¡Nació un cangrejo de carbón! Ahora te protege."
+  "message.mutantraisedead.egg_hatched": "¡Nació un cangrejo de carbón! Ahora te protege.",
+  "message.mutantraisedead.crab_furnace_placed": "¡Horno puesto! Hacele clic derecho al cangrejo para usarlo: cocina sin combustible.",
+  "message.mutantraisedead.crab_furnace_already": "Este cangrejo ya tiene un horno.",
+  "message.mutantraisedead.crab_furnace_not_owner": "Este cangrejo no es tuyo."
 }

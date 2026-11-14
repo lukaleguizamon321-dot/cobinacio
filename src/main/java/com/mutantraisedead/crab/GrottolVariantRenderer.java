@@ -15,6 +15,8 @@ public class GrottolVariantRenderer extends MobRenderer<GrottolVariantEntity, Gr
     public GrottolVariantRenderer(EntityRendererProvider.Context context, GrottolVariant variant) {
         super(context, new GrottolVariantModel(variant.shape == GrottolVariant.Shape.CRYSTAL), 0.7F);
         this.texture = ResourceLocation.fromNamespaceAndPath(MutantRaiseDead.MODID, "textures/entity/" + variant.id + ".png");
+        // el horno de la mascota de carbon (solo se dibuja si el cangrejo lo tiene puesto)
+        this.addLayer(new CrabFurnaceLayer(this));
     }
 
     @Override

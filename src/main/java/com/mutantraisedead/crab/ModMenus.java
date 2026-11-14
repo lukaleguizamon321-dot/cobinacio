@@ -13,7 +13,7 @@ public final class ModMenus {
     private static final DeferredRegister<MenuType<?>> MENUS = DeferredRegister.create(ForgeRegistries.MENU_TYPES, MutantRaiseDead.MODID);
 
     public static final RegistryObject<MenuType<CrabFurnaceMenu>> CRAB_FURNACE =
-            MENUS.register("crab_furnace", () -> IForgeMenuType.create(CrabFurnaceMenu::new));
+            MENUS.register("crab_furnace", () -> IForgeMenuType.<CrabFurnaceMenu>create((id, inventory, buf) -> new CrabFurnaceMenu(id, inventory, buf)));
 
     private ModMenus() {
     }

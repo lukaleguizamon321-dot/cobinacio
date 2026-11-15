@@ -75,7 +75,8 @@ public final class ModBlocks {
                     .strength(0.8F, 3.0F)
                     .sound(SoundType.STONE)
                     .lightLevel(state -> 5)
-                    .noOcclusion()));
+                    .noOcclusion(),
+            GrottolVariant.COAL));
     /** Huevo pulido (el que se coloca para incubar). */
     public static final RegistryObject<Item> COAL_EGG_ITEM =
             ITEMS.register("coal_crab_egg", () -> new PolishedEggItem(COAL_EGG.get(),
@@ -83,14 +84,34 @@ public final class ModBlocks {
     /** Huevo con imperfecciones: lo suelta el jefe; se pule en la piedra de afilar. */
     public static final RegistryObject<Item> COAL_EGG_ROUGH =
             ITEMS.register("coal_crab_egg_rough", () -> new RoughEggItem(
-                    new Item.Properties().rarity(Rarity.RARE).stacksTo(1).fireResistant()));
+                    new Item.Properties().rarity(Rarity.RARE).stacksTo(1).fireResistant(), false));
+
+    /** Huevo de Cangrejo de Cobre (v1.16): igual que el de carbon, pero del jefe de la guarida de cobre; incuba sobre un bloque de cobre. */
+    public static final RegistryObject<Block> COPPER_EGG = BLOCKS.register("copper_crab_egg", () -> new CrabEggBlock(
+            BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_ORANGE)
+                    .strength(0.8F, 3.0F)
+                    .sound(SoundType.COPPER)
+                    .lightLevel(state -> 6)
+                    .noOcclusion(),
+            GrottolVariant.COPPER));
+    public static final RegistryObject<Item> COPPER_EGG_ITEM =
+            ITEMS.register("copper_crab_egg", () -> new PolishedEggItem(COPPER_EGG.get(),
+                    new Item.Properties().rarity(Rarity.EPIC).stacksTo(1).fireResistant()));
+    public static final RegistryObject<Item> COPPER_EGG_ROUGH =
+            ITEMS.register("copper_crab_egg_rough", () -> new RoughEggItem(
+                    new Item.Properties().rarity(Rarity.RARE).stacksTo(1).fireResistant(), true));
+
     public static final RegistryObject<BlockEntityType<CrabEggBlockEntity>> CRAB_EGG_ENTITY =
-            BLOCK_ENTITIES.register("crab_egg", () -> BlockEntityType.Builder.of(CrabEggBlockEntity::new, COAL_EGG.get()).build(null));
+            BLOCK_ENTITIES.register("crab_egg", () -> BlockEntityType.Builder.of(CrabEggBlockEntity::new, COAL_EGG.get(), COPPER_EGG.get()).build(null));
 
     public static final RegistryObject<NestFeature> NEST_FEATURE =
             FEATURES.register("iron_crab_nest", () -> new NestFeature(NoneFeatureConfiguration.CODEC));
     public static final RegistryObject<LairFeature> LAIR_FEATURE =
-            FEATURES.register("crab_lair", () -> new LairFeature(NoneFeatureConfiguration.CODEC));
+            FEATURES.register("crab_lair", () -> new LairFeature(NoneFeatureConfiguration.CODEC, LairFeature.Theme.COAL));
+    /** Guarida del Cangrejo Titan de Cobre (v1.16). */
+    public static final RegistryObject<LairFeature> COPPER_LAIR_FEATURE =
+            FEATURES.register("copper_lair", () -> new LairFeature(NoneFeatureConfiguration.CODEC, LairFeature.Theme.COPPER));
 
     private ModBlocks() {
     }

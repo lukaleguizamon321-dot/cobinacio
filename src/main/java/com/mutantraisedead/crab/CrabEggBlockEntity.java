@@ -16,9 +16,9 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
 /**
- * Cerebro del huevo.
+ * Cerebro del huevo (de carbon o de cobre, ver CrabEggBlock).
  *  - Huevo natural (pedestal = true): cada medio segundo mira si hay un jugador cerca; si lo hay, despierta al jefe.
- *  - Huevo pulido puesto por un jugador (pedestal = false): incuba mientras este arriba de su bloque de carbon.
+ *  - Huevo pulido puesto por un jugador (pedestal = false): incuba mientras este arriba de su bloque de carbon / cobre.
  *    Cuando se cumple el tiempo (10 minutos, ver eggIncubationSeconds) espera a que haya un jugador a menos de
  *    5 bloques; el primero que este cerca se vuelve el dueno del cangrejo chico que nace.
  */
@@ -61,7 +61,7 @@ public class CrabEggBlockEntity extends BlockEntity {
 
     private void tickIncubating(ServerLevel level, BlockPos pos) {
         // solo incuba arriba de su bloque de material puro
-        if (!CrabEggBlock.isIncubator(level.getBlockState(pos.below()))) {
+        if (!(getBlockState().getBlock() instanceof CrabEggBlock egg) || !egg.canIncubateOn(level.getBlockState(pos.below()))) {
             return;
         }
         int needed = neededTicks();
@@ -94,7 +94,10 @@ public class CrabEggBlockEntity extends BlockEntity {
     }
 
     private void hatch(ServerLevel level, BlockPos pos, Player owner) {
-        GrottolVariantEntity crab = ModEntities.CRABS.get(GrottolVariant.COAL).get().create(level);
+        if (!(getBlockState().getBlock() instanceof CrabEggBlock egg)) {
+            return;
+        }
+        GrottolVariantEntity crab = ModEntities.CRABS.get(egg.variant()).get().create(level);
         if (crab == null) {
             return;
         }
@@ -106,13 +109,16 @@ public class CrabEggBlockEntity extends BlockEntity {
         level.sendParticles(ParticleTypes.POOF, pos.getX() + 0.5D, pos.getY() + 0.5D, pos.getZ() + 0.5D, 12, 0.3D, 0.3D, 0.3D, 0.03D);
         level.playSound(null, pos, SoundEvents.TURTLE_EGG_HATCH, SoundSource.BLOCKS, 1.0F, 0.8F);
         level.playSound(null, pos, SoundEvents.STONE_BREAK, SoundSource.BLOCKS, 1.0F, 0.7F);
-        owner.displayClientMessage(Component.translatable("message.mutantraisedead.egg_hatched"), true);
+        owner.displayClientMessage(Component.translatable(egg.hatchedKey()), true);
     }
 
     /** Clic derecho: dice cuanto falta (o que falta algo). */
     public void showStatus(Player player) {
-        if (!CrabEggBlock.isIncubator(player.level().getBlockState(worldPosition.below()))) {
-            player.displayClientMessage(Component.translatable("message.mutantraisedead.egg_needs_block"), true);
+        if (!(getBlockState().getBlock() instanceof CrabEggBlock egg)) {
+            return;
+        }
+        if (!egg.canIncubateOn(player.level().getBlockState(worldPosition.below()))) {
+            player.displayClientMessage(Component.translatable(egg.needsBlockKey()), true);
             return;
         }
         int left = neededTicks() - incubation;

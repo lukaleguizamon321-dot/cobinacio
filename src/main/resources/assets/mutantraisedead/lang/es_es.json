@@ -95,5 +95,17 @@
   "message.mutantraisedead.egg_hatched": "¡Nació un cangrejo de carbón! Ahora te protege.",
   "message.mutantraisedead.crab_furnace_placed": "¡Horno puesto! Hacele clic derecho al cangrejo para usarlo: cocina sin combustible.",
   "message.mutantraisedead.crab_furnace_already": "Este cangrejo ya tiene un horno.",
-  "message.mutantraisedead.crab_furnace_not_owner": "Este cangrejo no es tuyo."
+  "message.mutantraisedead.crab_furnace_not_owner": "Este cangrejo no es tuyo.",
+  "entity.mutantraisedead.copper_crab_boss": "Cangrejo Titán de Cobre",
+  "item.mutantraisedead.copper_crab_boss_spawn_egg": "Huevo de aparición de Cangrejo Titán de Cobre",
+  "entity.mutantraisedead.colored_bolt": "Rayo de color",
+  "block.mutantraisedead.copper_crab_egg": "Huevo de Cangrejo de Cobre pulido",
+  "item.mutantraisedead.copper_crab_egg.tip": "Ponelo arriba de un bloque de cobre y esperá 10 minutos: nace un cangrejo de cobre chico que te obedece.",
+  "item.mutantraisedead.copper_crab_egg_rough": "Huevo de Cangrejo de Cobre con imperfecciones",
+  "item.mutantraisedead.copper_crab_egg_rough.tip": "Pulilo en una piedra de afilar.",
+  "message.mutantraisedead.egg_needs_block_copper": "Este huevo solo incuba arriba de un bloque de cobre.",
+  "message.mutantraisedead.egg_hatched_copper": "¡Nació un cangrejo de cobre! Ahora te protege.",
+  "effect.mutantraisedead.electrocution": "Electrocución",
+  "effect.mutantraisedead.paralysis": "Parálisis",
+  "effect.mutantraisedead.mana_lock": "Maná anulado"
 }

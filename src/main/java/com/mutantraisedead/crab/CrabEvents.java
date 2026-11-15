@@ -29,6 +29,7 @@ public final class CrabEvents {
     @SubscribeEvent
     public static void onBossAttributes(EntityAttributeCreationEvent event) {
         event.put(ModEntities.COAL_BOSS.get(), CoalCrabBossEntity.createAttributes().build());
+        event.put(ModEntities.COPPER_BOSS.get(), CopperCrabBossEntity.createAttributes().build());
     }
 
     @SubscribeEvent

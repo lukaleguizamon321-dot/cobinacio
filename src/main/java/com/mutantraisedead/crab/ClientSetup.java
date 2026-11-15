@@ -30,4 +30,10 @@ public final class ClientSetup {
     public static void onBossRenderer(EntityRenderersEvent.RegisterRenderers event) {
         event.registerEntityRenderer(ModEntities.COAL_BOSS.get(), CoalCrabBossRenderer::new);
     }
+
+    @SubscribeEvent
+    public static void onCopperRenderers(EntityRenderersEvent.RegisterRenderers event) {
+        event.registerEntityRenderer(ModEntities.COPPER_BOSS.get(), CopperCrabBossRenderer::new);
+        event.registerEntityRenderer(ModEntities.COLORED_BOLT.get(), ColoredBoltRenderer::new);
+    }
 }

@@ -1,4 +1,4 @@
-# Cobinatio v1.15.0 (Forge 1.20.1)
+# Cobinatio v1.16.0 (Forge 1.20.1)
 
 Combina hechizos de Iron's Spells 'n Spellbooks con mobs de otros mods.
 
@@ -263,3 +263,52 @@ La mascota de carbón (la que nace del huevo pulido) ahora puede llevar un **hor
 - Es el **horno común**: el alto horno y el ahumador (que son otros bloques) no se pueden poner todavía.
 
 Archivos nuevos: `crab/CrabFurnaceLayer.java` (dibujo), `crab/CrabFurnaceMenu.java` y `crab/CrabFurnaceScreen.java` (ventana), `crab/CrabFurnaceEvents.java` (poner el horno con el golpe), `crab/CrabFurnaceClient.java` y `crab/ModMenus.java` (registro). Si querés mover el horno o cambiarle el tamaño, los números están al principio de `CrabFurnaceLayer.java` (`CX`, `CY`, `CZ`, `HALF`, `HEIGHT`).
+
+## v1.16.0 - Jefe: Cangrejo Titán de Cobre (y su guarida)
+
+Segundo jefe del mod, con el mismo proceso que el de carbón: duerme como un huevo en el centro de **su propia guarida**, suelta su huevo, el huevo se pule y se incuba. El modelo es el del **cangrejo de cobre chico agrandado 4 veces** (6,4 de ancho y 4,7 de alto; la caja que se golpea es de 3,5 por 4,6). La textura es provisoria: `textures/entity/copper_crab_boss.png` es una copia de la del cangrejo de cobre chico; cuando hagas la tuya con ese nombre la reemplaza.
+
+**Cómo es el jefe**
+- 300 de vida (150 corazones; `copperBossHealth` en el config), armadura 8, no se mueve con los golpes, inmune al fuego, a las caídas y a los rayos. Tiene barra de jefe amarilla. Al despertar sale del suelo rugiendo (3 segundos, invencible).
+- **Golpe normal** cuando estás cerca (10 de daño).
+- **Embestida**: se prepara (pinzas abiertas, chispas en el suelo), corre en línea recta y se lleva puesto a quien se cruce (14 de daño y lo manda a volar). Si choca con una pared o una columna **se aturde unos 2,5 segundos** (ahí es cuando se lo ataca). Con menos de la mitad de vida es más rápida.
+- **Rayos de colores** (el ataque principal, ver abajo). Con menos de la mitad de vida espera menos entre ataques, junta energía más rápido y tira **dos rayos** a la vez (uno donde estás y otro adonde vas corriendo).
+
+**Los rayos de colores**
+Primero levanta las pinzas y le salen **partículas del color del rayo que va a tirar**, así sabés cuál viene. Un poco antes de que caiga marca en el suelo un **círculo de ese color** (queda fijo donde estabas: hay casi un segundo para salir corriendo). El rayo cae en un área de unos 2,4 bloques de radio. El daño base es 4 corazones (`copperBoltDamage`).
+- **Blanco**: el normal, solo daño.
+- **Violeta**: **Electrocución** (efecto nuevo). Una descarga violeta cada 2 segundos, de 1 corazón cada una (daño mágico, la armadura no lo frena). Dura **30 segundos**; con armadura de metal sube hasta **1 minuto**.
+- **Amarillo**: **Parálisis** (efecto nuevo). No te podés mover ni saltar. Dura **10 segundos**; con armadura de metal hasta **15**.
+- **Rojo**: daño **5% mayor** que el blanco; con armadura de metal, **10%**.
+- **Azul**: **Maná anulado** (efecto nuevo). Tu maná queda en 0 y no podés lanzar hechizos de Iron's Spells. Dura 20 segundos (`manaLockSeconds`). Cuando se te acaba el efecto el maná vuelve a regenerarse normal.
+- **Verde**: **no te lastima**. El rayo cae sobre el propio jefe y le **cura el 5% de su vida**. Si un jugador está **pegado al jefe** (a menos de 4 bloques), también recibe el rayo y **recupera 4 corazones**. Solo sale cuando el jefe tiene menos del 90% de vida.
+
+**Armadura de metal** = hierro, oro, cota de malla y netherita. Cuenta cuántas piezas llevás (0 a 4) y el efecto crece parejo: con 2 piezas dura la mitad de la diferencia. La lista está en `data/mutantraisedead/tags/items/conductive_armor.json` (se pueden agregar armaduras de otros mods).
+
+Todos los tiempos y daños se cambian en el config (`config/mutantraisedead-common.toml`, sección `cangrejos`).
+
+**Botín**: al morir suelta de **12 a 24 bloques de cobre** (más con Looting) y siempre el **Huevo de Cangrejo de Cobre con imperfecciones**.
+
+**El huevo de cobre** (igual que el de carbón)
+1. Se pule **solo** en la piedra de afilar y sale el **Huevo de Cangrejo de Cobre pulido**.
+2. Solo se puede poner **arriba de un bloque de cobre** (vale el cobre común, expuesto, desgastado u oxidado, y los encerados). En otro lado avisa y no se coloca.
+3. Incuba lo mismo que el de carbón (`eggIncubationSeconds`, 10 minutos); cuando se cumple, el primer jugador a menos de 5 bloques es el dueño y nace un **cangrejo de cobre chico aliado** (te sigue, te protege con sus rayos, nadie lo lastima, no suelta botín).
+4. Los dibujos del huevo (bloque, pulido y con imperfecciones) son los de carbón **pintados color cobre** con unas manchitas verdes de óxido; si querés cambiarlos son `textures/block/copper_crab_egg.png`, `textures/item/copper_crab_egg.png` y `textures/item/copper_crab_egg_rough.png`.
+
+**La guarida de cobre** (nueva, distinta a la de carbón)
+- Misma sala redonda grande (radio 15, 14 de alto, puerta de 5 por 6, enterrada en las cuevas), pero **toda de cobre**: cobre cortado encerado con tramos expuestos, desgastados y oxidados (verdosos). El piso tiene un anillo verde oxidado.
+- En el centro, el pedestal con el **huevo del jefe de cobre**.
+- **9 nidos de cangrejo de cobre** en la pared (en la de carbón hay uno de cada material).
+- Entre los nidos hay pilares con una **luz verde** (rana verde) y un **pararrayos** arriba.
+- **4 columnas de cobre con pararrayos** en la sala: sirven para taparte de los rayos y, si el jefe se las lleva por delante en una embestida, se aturde.
+- Se genera sola en el mundo (un poco más rara que la de carbón, 1 cada 40 chunks, en las cuevas). Para probarla: `/cobinatio guarida cobre` (la de carbón es `/cobinatio guarida` o `/cobinatio guarida carbon`).
+
+**En la pestaña creativa**: Huevo de aparición del jefe de cobre, Huevo de Cangrejo de Cobre con imperfecciones y pulido.
+
+Cosas a tener en cuenta
+- No pude probar el mod: lo escribí leyendo cómo funcionan las clases de Minecraft. El efecto **Maná anulado** usa la API de Iron's Spells (`MagicData.setMana`); si el compilador se queja de eso, pasame el error.
+- Las guaridas de carbón que ya estaban en tu mundo no cambian. La de cobre solo aparece en chunks nuevos o con el comando.
+- Todavía no hay cangrejos del Nether ni los jefes de los otros materiales.
+
+Archivos nuevos: `crab/CopperCrabBossEntity.java` (el jefe y sus ataques), `crab/CopperCrabBossModel.java` y `crab/CopperCrabBossRenderer.java` (dibujo), `crab/ColoredBoltEntity.java` y `crab/ColoredBoltRenderer.java` (los rayos), `crab/BoltColor.java`, `crab/MetalArmor.java`, `crab/ElectrocutionEffect.java`, `crab/ParalysisEffect.java`, `crab/ManaLockEffect.java`, `crab/EffectEvents.java`. Cambiados: `CrabEggBlock` (ahora sirve para carbón y cobre), `CrabEggBlockEntity`, `PolishedEggItem`, `RoughEggItem`, `EggEvents`, `ModBlocks`, `ModEntities`, `ModEffects`, `LairFeature` (dos temas), `LairCommand`, `ClientSetup`, `ClientEvents`, `CrabEvents`, `ModRegistry`, `Config`.
+

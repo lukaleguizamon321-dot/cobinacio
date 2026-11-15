@@ -21,6 +21,17 @@ public final class Config {
     public static final ForgeConfigSpec.BooleanValue CRAB_ABILITIES;
     public static final ForgeConfigSpec.IntValue GIANT_CRAB_HITS;
     public static final ForgeConfigSpec.IntValue COAL_BOSS_HEALTH;
+    public static final ForgeConfigSpec.IntValue COPPER_BOSS_HEALTH;
+    public static final ForgeConfigSpec.DoubleValue COPPER_BOLT_DAMAGE;
+    public static final ForgeConfigSpec.IntValue ELECTRO_SECONDS;
+    public static final ForgeConfigSpec.IntValue ELECTRO_METAL_SECONDS;
+    public static final ForgeConfigSpec.IntValue PARALYSIS_SECONDS;
+    public static final ForgeConfigSpec.IntValue PARALYSIS_METAL_SECONDS;
+    public static final ForgeConfigSpec.IntValue RED_BONUS_PERCENT;
+    public static final ForgeConfigSpec.IntValue RED_METAL_BONUS_PERCENT;
+    public static final ForgeConfigSpec.IntValue MANA_LOCK_SECONDS;
+    public static final ForgeConfigSpec.IntValue GREEN_HEAL_PERCENT;
+    public static final ForgeConfigSpec.DoubleValue GREEN_PLAYER_HEAL;
     public static final ForgeConfigSpec.IntValue BOSS_WAKE_RANGE;
     public static final ForgeConfigSpec.IntValue EGG_INCUBATION_SECONDS;
     public static final ForgeConfigSpec.IntValue DETECTED_SECONDS;
@@ -129,6 +140,39 @@ public final class Config {
         COAL_BOSS_HEALTH = b
                 .comment("Vida del jefe Cangrejo Titan de Carbon (300 = 150 corazones). Solo afecta a los jefes que aparezcan despues de cambiarlo.")
                 .defineInRange("coalBossHealth", 300, 20, 10000);
+        COPPER_BOSS_HEALTH = b
+                .comment("Vida del jefe Cangrejo Titan de Cobre (300 = 150 corazones). Solo afecta a los jefes que aparezcan despues de cambiarlo.")
+                .defineInRange("copperBossHealth", 300, 20, 10000);
+        COPPER_BOLT_DAMAGE = b
+                .comment("Cangrejo Titan de Cobre: dano de cada rayo de color (corazones x2; 8.0 = 4 corazones). El rojo hace un poco mas.")
+                .defineInRange("copperBoltDamage", 8.0D, 0.0D, 200.0D);
+        ELECTRO_SECONDS = b
+                .comment("Rayo violeta: segundos de Electrocucion (una descarga de 1 corazon cada 2 segundos) sin armadura de metal.")
+                .defineInRange("electrocutionSeconds", 30, 1, 3600);
+        ELECTRO_METAL_SECONDS = b
+                .comment("Rayo violeta: segundos de Electrocucion con las 4 piezas de armadura de metal (hierro, oro, cota de malla o netherita). Con menos piezas es un punto intermedio.")
+                .defineInRange("electrocutionMetalSeconds", 60, 1, 3600);
+        PARALYSIS_SECONDS = b
+                .comment("Rayo amarillo: segundos de Paralisis sin armadura de metal.")
+                .defineInRange("paralysisSeconds", 10, 1, 3600);
+        PARALYSIS_METAL_SECONDS = b
+                .comment("Rayo amarillo: segundos de Paralisis con las 4 piezas de armadura de metal.")
+                .defineInRange("paralysisMetalSeconds", 15, 1, 3600);
+        RED_BONUS_PERCENT = b
+                .comment("Rayo rojo: porcentaje de dano extra respecto del rayo blanco, sin armadura de metal.")
+                .defineInRange("redBonusPercent", 5, 0, 500);
+        RED_METAL_BONUS_PERCENT = b
+                .comment("Rayo rojo: porcentaje de dano extra con las 4 piezas de armadura de metal.")
+                .defineInRange("redMetalBonusPercent", 10, 0, 500);
+        MANA_LOCK_SECONDS = b
+                .comment("Rayo azul: segundos del efecto Mana anulado (no se puede tener mana, asi que no se pueden lanzar hechizos de Iron's Spells).")
+                .defineInRange("manaLockSeconds", 20, 1, 3600);
+        GREEN_HEAL_PERCENT = b
+                .comment("Rayo verde: porcentaje de la vida maxima que se cura el jefe.")
+                .defineInRange("greenHealPercent", 5, 0, 100);
+        GREEN_PLAYER_HEAL = b
+                .comment("Rayo verde: vida que recupera un jugador que este pegado al jefe cuando cae el rayo (corazones x2; 8.0 = 4 corazones).")
+                .defineInRange("greenPlayerHeal", 8.0D, 0.0D, 200.0D);
         BOSS_WAKE_RANGE = b
                 .comment("A cuantos bloques de distancia del huevo de la guarida se despierta el jefe.")
                 .defineInRange("bossWakeRange", 7, 2, 24);

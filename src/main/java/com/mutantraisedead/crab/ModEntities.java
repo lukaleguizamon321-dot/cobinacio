@@ -42,6 +42,27 @@ public final class ModEntities {
     public static final RegistryObject<Item> COAL_BOSS_EGG = ITEMS.register("coal_crab_boss_spawn_egg", () ->
             new ForgeSpawnEggItem(COAL_BOSS, 0x1B1B1F, 0xE0701A, new Item.Properties()));
 
+    /** Jefe de la guarida de cobre: Cangrejo Titan de Cobre (3,5 de ancho, 4,6 de alto). Sale del huevo del pedestal. */
+    public static final RegistryObject<EntityType<CopperCrabBossEntity>> COPPER_BOSS = TYPES.register("copper_crab_boss", () ->
+            EntityType.Builder.<CopperCrabBossEntity>of(CopperCrabBossEntity::new, MobCategory.MONSTER)
+                    .sized(3.5F, 4.6F)
+                    .fireImmune()
+                    .clientTrackingRange(16)
+                    .build(MutantRaiseDead.MODID + ":copper_crab_boss"));
+    public static final RegistryObject<Item> COPPER_BOSS_EGG = ITEMS.register("copper_crab_boss_spawn_egg", () ->
+            new ForgeSpawnEggItem(COPPER_BOSS, 0xC15A36, 0x3FB59B, new Item.Properties()));
+
+    /** Rayo de color del jefe de cobre (solo se ve; el dano lo hace el jefe). */
+    public static final RegistryObject<EntityType<ColoredBoltEntity>> COLORED_BOLT = TYPES.register("colored_bolt", () ->
+            EntityType.Builder.<ColoredBoltEntity>of(ColoredBoltEntity::new, MobCategory.MISC)
+                    .sized(0.5F, 0.5F)
+                    .noSave()
+                    .noSummon()
+                    .fireImmune()
+                    .clientTrackingRange(16)
+                    .updateInterval(Integer.MAX_VALUE)
+                    .build(MutantRaiseDead.MODID + ":colored_bolt"));
+
     static {
         for (GrottolVariant variant : GrottolVariant.values()) {
             RegistryObject<EntityType<GrottolVariantEntity>> type = TYPES.register(variant.id, () ->

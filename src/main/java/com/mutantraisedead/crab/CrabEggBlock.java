@@ -9,6 +9,7 @@ import net.minecraft.world.DifficultyInstance;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.LivingEntity;
+import net.minecraft.world.entity.Mob;
 import net.minecraft.world.entity.MobSpawnType;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.level.BlockGetter;
@@ -31,13 +32,15 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Huevo de Cangrejo de Carbon. Tiene dos usos segun la propiedad "pedestal":
+ * Huevo de jefe de cangrejo (v1.16: hay uno de carbon y uno de cobre, es la misma clase con distinta variante).
+ * Tiene dos usos segun la propiedad "pedestal":
  *
  *  - pedestal = true: el huevo NATURAL de la guarida. Duerme sobre el pedestal del centro; cuando alguien se acerca
- *    (o lo toca) desaparece, se destruye el pedestal y sale el Cangrejo Titan de Carbon. No se puede romper en
- *    supervivencia (si no, se salteaban al jefe).
- *  - pedestal = false: el huevo PULIDO que puso un jugador. Nunca invoca al jefe: si esta sobre un bloque de carbon,
- *    incuba (ver CrabEggBlockEntity) y nace un cangrejo chico aliado. Se puede romper y devuelve el huevo pulido.
+ *    (o lo toca) desaparece, se destruye el pedestal y sale el Cangrejo Titan (de Carbon o de Cobre, segun la guarida).
+ *    No se puede romper en supervivencia (si no, se salteaban al jefe).
+ *  - pedestal = false: el huevo PULIDO que puso un jugador. Nunca invoca al jefe: si esta sobre su bloque de material
+ *    puro (carbon / cobre), incuba (ver CrabEggBlockEntity) y nace un cangrejo chico aliado.
+ *    Se puede romper y devuelve el huevo pulido.
  */
 public class CrabEggBlock extends Block implements EntityBlock {
     public static final BooleanProperty PEDESTAL = BooleanProperty.create("pedestal");
@@ -46,14 +49,41 @@ public class CrabEggBlock extends Block implements EntityBlock {
     /** El pedestal de la guarida (ver LairFeature) tiene 3 capas debajo del huevo. */
     private static final int PEDESTAL_LAYERS = 3;
 
-    /** El bloque de material puro sobre el que incuba el huevo de carbon (con otros materiales, el bloque de ese material). */
-    public static boolean isIncubator(BlockState below) {
+    private final GrottolVariant variant;
+
+    /** variant: COAL o COPPER (de que cangrejo es el huevo). */
+    public CrabEggBlock(Properties properties, GrottolVariant variant) {
+        super(properties);
+        this.variant = variant;
+        registerDefaultState(stateDefinition.any().setValue(PEDESTAL, false));
+    }
+
+    public GrottolVariant variant() {
+        return variant;
+    }
+
+    /**
+     * El bloque de material puro sobre el que incuba el huevo: un bloque de carbon para el de carbon;
+     * para el de cobre vale el bloque de cobre en cualquiera de sus estados (nuevo, oxidado, encerado).
+     */
+    public boolean canIncubateOn(BlockState below) {
+        if (variant == GrottolVariant.COPPER) {
+            return below.is(Blocks.COPPER_BLOCK) || below.is(Blocks.EXPOSED_COPPER)
+                    || below.is(Blocks.WEATHERED_COPPER) || below.is(Blocks.OXIDIZED_COPPER)
+                    || below.is(Blocks.WAXED_COPPER_BLOCK) || below.is(Blocks.WAXED_EXPOSED_COPPER)
+                    || below.is(Blocks.WAXED_WEATHERED_COPPER) || below.is(Blocks.WAXED_OXIDIZED_COPPER);
+        }
         return below.is(Blocks.COAL_BLOCK);
     }
 
-    public CrabEggBlock(Properties properties) {
-        super(properties);
-        registerDefaultState(stateDefinition.any().setValue(PEDESTAL, false));
+    /** Clave del mensaje "hace falta el bloque de abajo" (el de cobre tiene el suyo). */
+    public String needsBlockKey() {
+        return variant == GrottolVariant.COPPER ? "message.mutantraisedead.egg_needs_block_copper" : "message.mutantraisedead.egg_needs_block";
+    }
+
+    /** Clave del mensaje "nacio tu cangrejo". */
+    public String hatchedKey() {
+        return variant == GrottolVariant.COPPER ? "message.mutantraisedead.egg_hatched_copper" : "message.mutantraisedead.egg_hatched";
     }
 
     @Override
@@ -88,7 +118,7 @@ public class CrabEggBlock extends Block implements EntityBlock {
     /** El huevo pulido solo se sostiene arriba de su bloque de material puro. */
     @Override
     public boolean canSurvive(BlockState state, LevelReader level, BlockPos pos) {
-        return state.getValue(PEDESTAL) || isIncubator(level.getBlockState(pos.below()));
+        return state.getValue(PEDESTAL) || canIncubateOn(level.getBlockState(pos.below()));
     }
 
     /** Si le sacan el bloque de abajo, el huevo pulido se suelta como objeto. */
@@ -133,7 +163,7 @@ public class CrabEggBlock extends Block implements EntityBlock {
 
     /** El huevo desaparece, se destruye el pedestal del centro y aparece el jefe. */
     public static void awaken(ServerLevel level, BlockPos pos, BlockState state, @Nullable LivingEntity wakener) {
-        if (!state.is(ModBlocks.COAL_EGG.get())) {
+        if (!(state.getBlock() instanceof CrabEggBlock eggBlock)) {
             return;
         }
         BlockPos floorPos = pos;
@@ -158,7 +188,9 @@ public class CrabEggBlock extends Block implements EntityBlock {
             level.destroyBlock(new BlockPos(pos.getX(), baseY + 2, pos.getZ()), false);
         }
 
-        CoalCrabBossEntity boss = ModEntities.COAL_BOSS.get().create(level);
+        Mob boss = eggBlock.variant == GrottolVariant.COPPER
+                ? ModEntities.COPPER_BOSS.get().create(level)
+                : ModEntities.COAL_BOSS.get().create(level);
         if (boss == null) {
             return;
         }

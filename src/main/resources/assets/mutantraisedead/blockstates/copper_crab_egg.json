@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "pedestal=false": {
+      "model": "mutantraisedead:block/copper_crab_egg"
+    },
+    "pedestal=true": {
+      "model": "mutantraisedead:block/copper_crab_egg"
+    }
+  }
+}

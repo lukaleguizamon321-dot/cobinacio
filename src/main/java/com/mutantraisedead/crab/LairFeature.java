@@ -4,6 +4,7 @@ import com.mojang.serialization.Codec;
 import net.minecraft.core.BlockPos;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.level.WorldGenLevel;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.Heightmap;
@@ -27,6 +28,11 @@ import net.minecraft.world.level.levelgen.feature.configurations.NoneFeatureConf
  *
  * Al generarse con el mundo, el centro se mueve al medio del chunk: Minecraft solo deja escribir bloques hasta
  * 16 bloques fuera del chunk que se esta generando, y la sala llega a 17,5 desde el centro.
+ *
+ * v1.16: hay dos temas. COAL es la guarida de piedra de siempre (jefe de carbon, un nido de cada material).
+ * COPPER es la guarida del Cangrejo Titan de Cobre: misma sala pero toda de cobre (cobre cortado encerado, con tramos
+ * oxidados y verdosos), con el huevo de cobre en el pedestal, los 9 nidos de cangrejo de cobre, pilares con luz verde
+ * y pararrayos, y 4 columnas de cobre con pararrayos en la sala (el jefe se aturde si se las lleva por delante en una embestida).
  */
 public class LairFeature extends Feature<NoneFeatureConfiguration> {
     /** Alto del interior en bloques. */
@@ -40,20 +46,32 @@ public class LairFeature extends Feature<NoneFeatureConfiguration> {
     private static final double NEST_RADIUS = 15.4D;
     private static final double PILLAR_RADIUS = 14.3D;
 
-    /** Orden de los nidos alrededor de la sala. */
+    /** Para que jefe es la guarida. */
+    public enum Theme {
+        COAL, COPPER
+    }
+
+    /** Orden de los nidos alrededor de la sala (guarida de carbon: uno de cada material). */
     private static final GrottolVariant[] NEST_ORDER = {
             GrottolVariant.COAL, GrottolVariant.IRON, GrottolVariant.COPPER,
             GrottolVariant.GOLD, GrottolVariant.LAPIS, GrottolVariant.AMETHYST,
             GrottolVariant.REDSTONE, GrottolVariant.DIAMOND, GrottolVariant.EMERALD
     };
 
-    /** Bloques con los que se arma la sala (de piedra arriba, de pizarra profunda abajo de Y=0). */
+    /**
+     * Bloques con los que se arma la sala (de piedra arriba, de pizarra profunda abajo de Y=0, o de cobre).
+     * light = lo que se pone arriba de cada pilar; topExtra = lo que va arriba de la luz (aire si no hay nada).
+     */
     private record Palette(BlockState brick, BlockState cracked, BlockState alt, BlockState rubble,
-                           BlockState inner, BlockState ring, BlockState chiseled, BlockState pillar, BlockState lantern) {
+                           BlockState inner, BlockState ring, BlockState chiseled, BlockState pillar,
+                           BlockState light, BlockState topExtra) {
     }
 
-    public LairFeature(Codec<NoneFeatureConfiguration> codec) {
+    private final Theme theme;
+
+    public LairFeature(Codec<NoneFeatureConfiguration> codec, Theme theme) {
         super(codec);
+        this.theme = theme;
     }
 
     @Override
@@ -61,10 +79,23 @@ public class LairFeature extends Feature<NoneFeatureConfiguration> {
         BlockPos o = context.origin();
         // al medio del chunk: asi la sala (hasta 17,5 bloques) nunca pasa del limite de escritura (16 bloques fuera del chunk)
         BlockPos center = new BlockPos((o.getX() >> 4 << 4) + 8, o.getY(), (o.getZ() >> 4 << 4) + 8);
-        return build(context.level(), center, context.random(), false);
+        return build(context.level(), center, context.random(), false, theme);
     }
 
-    private static Palette palette(boolean deep) {
+    private static Palette palette(Theme theme, boolean deep) {
+        if (theme == Theme.COPPER) {
+            return new Palette(
+                    Blocks.WAXED_CUT_COPPER.defaultBlockState(),
+                    Blocks.WAXED_EXPOSED_CUT_COPPER.defaultBlockState(),
+                    Blocks.WAXED_WEATHERED_CUT_COPPER.defaultBlockState(),
+                    Blocks.WAXED_OXIDIZED_CUT_COPPER.defaultBlockState(),
+                    Blocks.WAXED_CUT_COPPER.defaultBlockState(),
+                    Blocks.WAXED_OXIDIZED_CUT_COPPER.defaultBlockState(),
+                    Blocks.WAXED_COPPER_BLOCK.defaultBlockState(),
+                    Blocks.WAXED_EXPOSED_CUT_COPPER.defaultBlockState(),
+                    Blocks.VERDANT_FROGLIGHT.defaultBlockState(),
+                    Blocks.LIGHTNING_ROD.defaultBlockState());
+        }
         if (deep) {
             return new Palette(
                     Blocks.DEEPSLATE_BRICKS.defaultBlockState(),
@@ -75,7 +106,8 @@ public class LairFeature extends Feature<NoneFeatureConfiguration> {
                     Blocks.DEEPSLATE_TILES.defaultBlockState(),
                     Blocks.CHISELED_DEEPSLATE.defaultBlockState(),
                     Blocks.POLISHED_DEEPSLATE.defaultBlockState(),
-                    Blocks.SOUL_LANTERN.defaultBlockState());
+                    Blocks.SOUL_LANTERN.defaultBlockState(),
+                    Blocks.AIR.defaultBlockState());
         }
         return new Palette(
                 Blocks.STONE_BRICKS.defaultBlockState(),
@@ -86,7 +118,8 @@ public class LairFeature extends Feature<NoneFeatureConfiguration> {
                 Blocks.SMOOTH_STONE.defaultBlockState(),
                 Blocks.CHISELED_STONE_BRICKS.defaultBlockState(),
                 Blocks.POLISHED_ANDESITE.defaultBlockState(),
-                Blocks.LANTERN.defaultBlockState());
+                Blocks.LANTERN.defaultBlockState(),
+                Blocks.AIR.defaultBlockState());
     }
 
     /**
@@ -94,6 +127,11 @@ public class LairFeature extends Feature<NoneFeatureConfiguration> {
      * Devuelve false si el lugar no sirve.
      */
     public static boolean build(WorldGenLevel level, BlockPos origin, RandomSource random, boolean force) {
+        return build(level, origin, random, force, Theme.COAL);
+    }
+
+    /** Igual que arriba, pero eligiendo para que jefe es la guarida (Theme.COAL o Theme.COPPER). */
+    public static boolean build(WorldGenLevel level, BlockPos origin, RandomSource random, boolean force, Theme theme) {
         int y0 = origin.getY();
         if (y0 - 3 < level.getMinBuildHeight() || y0 + HEIGHT + 3 >= level.getMaxBuildHeight()) {
             return false;
@@ -102,7 +140,8 @@ public class LairFeature extends Feature<NoneFeatureConfiguration> {
             return false;
         }
 
-        Palette p = palette(y0 < 0);
+        boolean copper = theme == Theme.COPPER;
+        Palette p = palette(theme, y0 < 0);
         int cx = origin.getX();
         int cz = origin.getZ();
 
@@ -138,8 +177,24 @@ public class LairFeature extends Feature<NoneFeatureConfiguration> {
             }
         }
         set(level, cx, y0 + 2, cz, p.chiseled());
-        // El huevo del jefe de carbon va arriba del pedestal; al acercarte despierta (ver CrabEggBlock)
-        set(level, cx, y0 + 3, cz, ModBlocks.COAL_EGG.get().defaultBlockState().setValue(CrabEggBlock.PEDESTAL, true));
+        // El huevo del jefe (de carbon o de cobre) va arriba del pedestal; al acercarte despierta (ver CrabEggBlock)
+        Block egg = copper ? ModBlocks.COPPER_EGG.get() : ModBlocks.COAL_EGG.get();
+        set(level, cx, y0 + 3, cz, egg.defaultBlockState().setValue(CrabEggBlock.PEDESTAL, true));
+
+        // Guarida de cobre: 4 columnas con pararrayos en las diagonales de la sala (cubren de los rayos y frenan la embestida)
+        if (copper) {
+            for (int sx = -1; sx <= 1; sx += 2) {
+                for (int sz = -1; sz <= 1; sz += 2) {
+                    int colX = cx + sx * 7;
+                    int colZ = cz + sz * 7;
+                    for (int dy = 0; dy < 7; dy++) {
+                        set(level, colX, y0 + dy, colZ, dy == 0 ? p.chiseled() : p.pillar());
+                    }
+                    set(level, colX, y0 + 7, colZ, p.light());
+                    set(level, colX, y0 + 8, colZ, p.topExtra());
+                }
+            }
+        }
 
         // 3) Puerta de 5x6 hacia uno de los cuatro lados (atraviesa la pared)
         int doorQuarter = random.nextInt(4);
@@ -161,7 +216,8 @@ public class LairFeature extends Feature<NoneFeatureConfiguration> {
         // 4) Nidos en la pared, con un pilar con farol entre cada par. La puerta queda en el hueco que sobra.
         double doorAngle = Math.atan2(uz, ux);
         for (int k = 0; k < NEST_ORDER.length; k++) {
-            GrottolVariant variant = NEST_ORDER[k];
+            // guarida de cobre: los 9 nidos son de cangrejo de cobre
+            GrottolVariant variant = copper ? GrottolVariant.COPPER : NEST_ORDER[k];
             BlockState nest = variant == GrottolVariant.IRON && y0 < 0
                     ? ModBlocks.DEEPSLATE_NEST.get().defaultBlockState()
                     : ModBlocks.lairNest(variant).defaultBlockState();
@@ -186,7 +242,8 @@ public class LairFeature extends Feature<NoneFeatureConfiguration> {
             for (int dy = 0; dy < HEIGHT - 2; dy++) {
                 set(level, px, y0 + dy, pz, dy == 0 || dy == HEIGHT - 3 ? p.chiseled() : p.pillar());
             }
-            set(level, px, y0 + HEIGHT - 2, pz, p.lantern());
+            set(level, px, y0 + HEIGHT - 2, pz, p.light());
+            set(level, px, y0 + HEIGHT - 1, pz, p.topExtra());
         }
         return true;
     }

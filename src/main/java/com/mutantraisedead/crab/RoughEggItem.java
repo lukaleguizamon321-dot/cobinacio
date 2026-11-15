@@ -11,12 +11,16 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 /**
- * Huevo de Cangrejo de Carbon con imperfecciones: lo suelta el Cangrejo Titan al morir.
+ * Huevo de Cangrejo con imperfecciones (de Carbon o de Cobre): lo suelta el Cangrejo Titan al morir.
  * No se puede colocar; hay que pulirlo en una piedra de afilar (ver EggEvents), y ahi sale el huevo pulido.
  */
 public class RoughEggItem extends Item {
-    public RoughEggItem(Properties properties) {
+    private final boolean copper;
+
+    /** copper = true para el huevo con imperfecciones del Cangrejo Titan de Cobre. */
+    public RoughEggItem(Properties properties, boolean copper) {
         super(properties);
+        this.copper = copper;
     }
 
     /** Hace falta para que la piedra de afilar acepte este objeto en sus ranuras. */
@@ -27,6 +31,7 @@ public class RoughEggItem extends Item {
 
     @Override
     public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(Component.translatable("item.mutantraisedead.coal_crab_egg_rough.tip").withStyle(ChatFormatting.GRAY));
+        tooltip.add(Component.translatable(copper ? "item.mutantraisedead.copper_crab_egg_rough.tip" : "item.mutantraisedead.coal_crab_egg_rough.tip")
+                .withStyle(ChatFormatting.GRAY));
     }
 }

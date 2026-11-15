@@ -16,7 +16,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 /**
- * Huevo de Cangrejo de Carbon pulido. Solo se puede poner arriba de su bloque de material puro (un bloque de carbon);
+ * Huevo de Cangrejo (de Carbon o de Cobre) pulido. Solo se puede poner arriba de su bloque de material puro (carbon / cobre);
  * ahi incuba (10 minutos) y nace un cangrejo chico aliado. Si se pone en otro lado avisa y no se coloca.
  */
 public class PolishedEggItem extends BlockItem {
@@ -28,10 +28,10 @@ public class PolishedEggItem extends BlockItem {
     public InteractionResult place(BlockPlaceContext context) {
         Level level = context.getLevel();
         BlockPos target = context.getClickedPos();
-        if (!CrabEggBlock.isIncubator(level.getBlockState(target.below()))) {
+        if (getBlock() instanceof CrabEggBlock egg && !egg.canIncubateOn(level.getBlockState(target.below()))) {
             Player player = context.getPlayer();
             if (player != null && !level.isClientSide) {
-                player.displayClientMessage(Component.translatable("message.mutantraisedead.egg_needs_block"), true);
+                player.displayClientMessage(Component.translatable(egg.needsBlockKey()), true);
             }
             return InteractionResult.FAIL;
         }
@@ -40,6 +40,8 @@ public class PolishedEggItem extends BlockItem {
 
     @Override
     public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag flag) {
-        tooltip.add(Component.translatable("item.mutantraisedead.coal_crab_egg.tip").withStyle(ChatFormatting.GRAY));
+        boolean copper = getBlock() instanceof CrabEggBlock egg && egg.variant() == GrottolVariant.COPPER;
+        tooltip.add(Component.translatable(copper ? "item.mutantraisedead.copper_crab_egg.tip" : "item.mutantraisedead.coal_crab_egg.tip")
+                .withStyle(ChatFormatting.GRAY));
     }
 }

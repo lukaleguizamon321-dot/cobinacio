@@ -17,6 +17,13 @@ public final class ModEffects {
     /** "Desafortunado": Fortuna al reves; las menas sueltan menos y la suerte baja. */
     public static final RegistryObject<MobEffect> UNLUCKY = EFFECTS.register("unlucky", UnluckyEffect::new);
 
+    /** "Electrocucion" (rayo violeta): una descarga de un corazon cada 2 segundos. */
+    public static final RegistryObject<MobEffect> ELECTROCUTION = EFFECTS.register("electrocution", ElectrocutionEffect::new);
+    /** "Paralisis" (rayo amarillo): no te podes mover ni saltar. */
+    public static final RegistryObject<MobEffect> PARALYSIS = EFFECTS.register("paralysis", ParalysisEffect::new);
+    /** "Mana anulado" (rayo azul): el mana queda en 0 y no se pueden lanzar hechizos. */
+    public static final RegistryObject<MobEffect> MANA_LOCK = EFFECTS.register("mana_lock", ManaLockEffect::new);
+
     private ModEffects() {
     }
 

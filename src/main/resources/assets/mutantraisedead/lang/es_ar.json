@@ -107,5 +107,10 @@
   "message.mutantraisedead.egg_hatched_copper": "¡Nació un cangrejo de cobre! Ahora te protege.",
   "effect.mutantraisedead.electrocution": "Electrocución",
   "effect.mutantraisedead.paralysis": "Parálisis",
-  "effect.mutantraisedead.mana_lock": "Maná anulado"
+  "effect.mutantraisedead.mana_lock": "Maná anulado",
+  "message.mutantraisedead.crab_rod_placed": "¡Pararrayos puesto! Dale clic izquierdo al cangrejo para cambiar de rayo.",
+  "message.mutantraisedead.crab_rod_mode": "Rayo del cangrejo: %s",
+  "message.mutantraisedead.crab_rod_green": "verde (cura al dueño y a las mascotas cerca)",
+  "message.mutantraisedead.crab_rod_violet": "violeta (electrocuta a los monstruos)",
+  "message.mutantraisedead.crab_rod_yellow": "amarillo (paraliza a los monstruos)"
 }

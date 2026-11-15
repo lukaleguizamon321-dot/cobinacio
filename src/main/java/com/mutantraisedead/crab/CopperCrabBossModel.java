@@ -12,18 +12,19 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Modelo del jefe de cobre (Cangrejo Titan de Cobre): es el mismo modelo del cangrejo chico de Blockbench
- * ("cangry.bbmodel", geometria en CrabMeshData.DATA) y el renderer lo agranda.
- * Piezas moviles: body, shell, leg0..leg3, clawP (+x) / clawN (-x).
+ * Modelo del jefe de cobre (Cangrejo Titan de Cobre): es el mismo modelo grande del jefe de carbon ("boss.bbmodel"),
+ * con la textura de cobre (textures/entity/copper_crab_boss.png). Caparazon, cuerpo con ojos, 4 patas grandes y 2 pinzas enormes.
+ * Piezas moviles: body, shell, leg0..leg3 (leg0/leg1 = lado +x, delante/atras; leg2/leg3 = lado -x), clawP (+x) / clawN (-x).
  * Las animaciones usan las mismas direcciones que en Blockbench (Y arriba, el frente es -Z).
+ * La geometria esta en CrabMeshData.BOSS; el renderer lo agranda con SCALE.
  */
 public class CopperCrabBossModel extends EntityModel<CopperCrabBossEntity> {
     private static final float UNIT = 1.0F / 16.0F;
     private static final float FLOOR = 1.501F;
     private static final String[] ORDER = {"body", "shell", "leg0", "leg1", "leg2", "leg3", "clawP", "clawN"};
 
-    /** Cuanto se hunde (en bloques del modelo, antes de agrandarlo) mientras sale del suelo: todo el cuerpo (1,2 de alto). */
-    private static final float AWAKEN_DEPTH = 1.25F;
+    /** Cuanto se hunde (en bloques del modelo, antes de agrandarlo) mientras sale del suelo: todo el cuerpo (5,25 de alto). */
+    private static final float AWAKEN_DEPTH = 5.4F;
 
     private static final class Quad {
         float nx;
@@ -39,7 +40,7 @@ public class CopperCrabBossModel extends EntityModel<CopperCrabBossEntity> {
         final List<Quad> quads = new ArrayList<>();
     }
 
-    private static final Group[] GROUPS = parse(CrabMeshData.DATA);
+    private static final Group[] GROUPS = parse(CrabMeshData.BOSS);
 
     private final float[] rx = new float[ORDER.length];
     private final float[] ry = new float[ORDER.length];
@@ -56,11 +57,18 @@ public class CopperCrabBossModel extends EntityModel<CopperCrabBossEntity> {
         throw new IllegalStateException("Pieza desconocida en el modelo: " + name);
     }
 
-    private static Group[] parse(String data) {
+    private static Group[] parse(String[] chunks) {
         Group[] groups = new Group[ORDER.length];
         for (int i = 0; i < groups.length; i++) {
             groups[i] = new Group();
         }
+        for (String data : chunks) {
+            parseChunk(data, groups);
+        }
+        return groups;
+    }
+
+    private static void parseChunk(String data, Group[] groups) {
         for (String raw : data.split("\n")) {
             String line = raw.trim();
             if (line.isEmpty()) {
@@ -83,7 +91,6 @@ public class CopperCrabBossModel extends EntityModel<CopperCrabBossEntity> {
                 g.quads.add(q);
             }
         }
-        return groups;
     }
 
     @Override
@@ -104,11 +111,11 @@ public class CopperCrabBossModel extends EntityModel<CopperCrabBossEntity> {
             float side = i < 2 ? 1.0F : -1.0F;
             float phase = (i == 0 || i == 2) ? 0.0F : Mth.PI;
             float s = limbSwing * legSpeed + phase;
-            ry[idx] = side * Mth.cos(s) * 0.30F * walk;
-            rz[idx] = side * (Math.max(0.0F, Mth.sin(s)) * 0.25F * walk + Mth.sin(ageInTicks * 0.1F + i * 1.7F) * 0.015F);
+            ry[idx] = side * Mth.cos(s) * 0.20F * walk;
+            rz[idx] = side * (Math.max(0.0F, Mth.sin(s)) * 0.17F * walk + Mth.sin(ageInTicks * 0.1F + i * 1.7F) * 0.012F);
         }
 
-        // Pinzas, segun lo que esta haciendo
+        // Pinzas y caparazon, segun lo que esta haciendo
         for (int i = 0; i < 2; i++) {
             int idx = 6 + i;
             float side = i == 0 ? 1.0F : -1.0F;
@@ -120,19 +127,19 @@ public class CopperCrabBossModel extends EntityModel<CopperCrabBossEntity> {
                 }
                 case CopperCrabBossEntity.ACTION_BOLT_WINDUP -> {
                     // pinzas arriba y temblando: ahi se juntan las particulas del color del rayo
-                    rx[idx] = 1.15F + Mth.sin(ageInTicks * 1.8F + i) * 0.07F;
+                    rx[idx] = CopperCrabBossEntity.CLAW_RAISE + Mth.sin(ageInTicks * 1.8F + i) * 0.06F;
                     ry[idx] = side * (0.12F + Mth.sin(ageInTicks * 2.1F) * 0.05F);
                 }
                 case CopperCrabBossEntity.ACTION_BOLT_CAST -> {
                     // al tirar el rayo las pinzas bajan de golpe
                     float drop = Mth.clamp(t / 4.0F, 0.0F, 1.0F);
-                    rx[idx] = 1.15F - 0.9F * drop;
+                    rx[idx] = CopperCrabBossEntity.CLAW_RAISE - 0.8F * drop;
                     ry[idx] = side * 0.1F;
                 }
                 case CopperCrabBossEntity.ACTION_CHARGE_WINDUP -> {
                     // pinzas abiertas hacia los costados, temblando
                     rx[idx] = 0.4F;
-                    ry[idx] = side * (0.5F + Mth.sin(ageInTicks * 2.2F) * 0.05F);
+                    ry[idx] = side * (0.45F + Mth.sin(ageInTicks * 2.2F) * 0.05F);
                 }
                 case CopperCrabBossEntity.ACTION_CHARGING -> {
                     // pinzas juntas hacia adelante
@@ -140,7 +147,7 @@ public class CopperCrabBossModel extends EntityModel<CopperCrabBossEntity> {
                     ry[idx] = side * -0.1F;
                 }
                 case CopperCrabBossEntity.ACTION_STUNNED -> {
-                    // pinzas caidas
+                    // pinzas caidas (sin hundirlas en el suelo)
                     rx[idx] = 0.05F;
                     ry[idx] = side * 0.25F;
                 }
@@ -150,7 +157,7 @@ public class CopperCrabBossModel extends EntityModel<CopperCrabBossEntity> {
                         rx[idx] = 0.8F + Mth.sin(ageInTicks * 1.4F + i) * 0.12F;
                         ry[idx] = side * (0.2F + Mth.sin(ageInTicks * 1.6F) * 0.3F);
                     } else {
-                        rx[idx] = 0.15F + Mth.sin(ageInTicks * 0.12F + i * 1.3F) * 0.04F;
+                        rx[idx] = 0.2F + Mth.sin(ageInTicks * 0.12F + i * 1.3F) * 0.04F;
                         ry[idx] = side * (0.05F + Mth.sin(ageInTicks * 0.09F + i * 1.3F) * 0.12F);
                     }
                 }
@@ -158,8 +165,8 @@ public class CopperCrabBossModel extends EntityModel<CopperCrabBossEntity> {
         }
 
         // Caparazon: respira, tiembla al prepararse y se sacude al aturdirse
-        rx[1] = Mth.sin(ageInTicks * 0.07F) * 0.02F;
-        rz[1] = Mth.sin(limbSwing * 1.1F) * 0.02F * walk;
+        rx[1] = Mth.sin(ageInTicks * 0.07F) * 0.015F;
+        rz[1] = Mth.sin(limbSwing * 1.1F) * 0.015F * walk;
         switch (action) {
             case CopperCrabBossEntity.ACTION_AWAKEN, CopperCrabBossEntity.ACTION_CHARGE_WINDUP ->
                     rz[1] += Mth.sin(ageInTicks * 2.4F) * 0.03F;
@@ -170,7 +177,7 @@ public class CopperCrabBossModel extends EntityModel<CopperCrabBossEntity> {
         }
 
         // Rebote al caminar
-        bob = Math.abs(Mth.cos(limbSwing * legSpeed)) * 0.03F * walk;
+        bob = Math.abs(Mth.cos(limbSwing * legSpeed)) * 0.06F * walk;
 
         // Al despertar sale del suelo
         if (action == CopperCrabBossEntity.ACTION_AWAKEN) {

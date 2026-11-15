@@ -7,19 +7,21 @@ import net.minecraft.client.renderer.entity.MobRenderer;
 import net.minecraft.resources.ResourceLocation;
 
 /**
- * Renderer del jefe de cobre: el modelo del cangrejo de cobre chico, agrandado.
- * La textura es textures/entity/copper_crab_boss.png (por ahora es una copia de la del cangrejo de cobre chico;
- * cuando hagas la tuya con el mismo nombre, la reemplaza).
+ * Renderer del jefe de cobre: el mismo modelo grande del jefe de carbon (boss.bbmodel) con su textura de cobre
+ * (textures/entity/copper_crab_boss.png).
  */
 public class CopperCrabBossRenderer extends MobRenderer<CopperCrabBossEntity, CopperCrabBossModel> {
     private static final ResourceLocation TEXTURE =
             ResourceLocation.fromNamespaceAndPath(MutantRaiseDead.MODID, "textures/entity/copper_crab_boss.png");
 
     public CopperCrabBossRenderer(EntityRendererProvider.Context context) {
-        super(context, new CopperCrabBossModel(), 2.6F);
+        super(context, new CopperCrabBossModel(), 3.0F);
     }
 
-    /** El modelo chico mide 1,6 de ancho y 1,2 de alto: x4 queda de 6,4 por 4,7 bloques. */
+    /**
+     * El modelo, tal como lo hiciste en Blockbench, mide 5,25 bloques de alto; x1,14 lo deja en 6 bloques (igual que el de carbon).
+     * Las patas y las pinzas abiertas salen mas anchas que la caja del jefe (3 x 6): la caja es lo que se golpea, el modelo es lo que se ve.
+     */
     @Override
     protected void scale(CopperCrabBossEntity entity, PoseStack poseStack, float partialTick) {
         float s = CopperCrabBossEntity.MODEL_SCALE;

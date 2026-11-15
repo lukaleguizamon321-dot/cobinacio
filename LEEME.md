@@ -1,4 +1,4 @@
-# Cobinatio v1.16.0 (Forge 1.20.1)
+# Cobinatio v1.17.0 (Forge 1.20.1)
 
 Combina hechizos de Iron's Spells 'n Spellbooks con mobs de otros mods.
 
@@ -266,7 +266,7 @@ Archivos nuevos: `crab/CrabFurnaceLayer.java` (dibujo), `crab/CrabFurnaceMenu.ja
 
 ## v1.16.0 - Jefe: Cangrejo Titán de Cobre (y su guarida)
 
-Segundo jefe del mod, con el mismo proceso que el de carbón: duerme como un huevo en el centro de **su propia guarida**, suelta su huevo, el huevo se pule y se incuba. El modelo es el del **cangrejo de cobre chico agrandado 4 veces** (6,4 de ancho y 4,7 de alto; la caja que se golpea es de 3,5 por 4,6). La textura es provisoria: `textures/entity/copper_crab_boss.png` es una copia de la del cangrejo de cobre chico; cuando hagas la tuya con ese nombre la reemplaza.
+Segundo jefe del mod, con el mismo proceso que el de carbón: duerme como un huevo en el centro de **su propia guarida**, suelta su huevo, el huevo se pule y se incuba. (En la v1.17.0 pasó a usar el modelo grande del jefe de carbón con tu textura de cobre; ver la sección de abajo. La caja que se golpea es de 3 de ancho por 6 de alto.)
 
 **Cómo es el jefe**
 - 300 de vida (150 corazones; `copperBossHealth` en el config), armadura 8, no se mueve con los golpes, inmune al fuego, a las caídas y a los rayos. Tiene barra de jefe amarilla. Al despertar sale del suelo rugiendo (3 segundos, invencible).
@@ -311,4 +311,30 @@ Cosas a tener en cuenta
 - Todavía no hay cangrejos del Nether ni los jefes de los otros materiales.
 
 Archivos nuevos: `crab/CopperCrabBossEntity.java` (el jefe y sus ataques), `crab/CopperCrabBossModel.java` y `crab/CopperCrabBossRenderer.java` (dibujo), `crab/ColoredBoltEntity.java` y `crab/ColoredBoltRenderer.java` (los rayos), `crab/BoltColor.java`, `crab/MetalArmor.java`, `crab/ElectrocutionEffect.java`, `crab/ParalysisEffect.java`, `crab/ManaLockEffect.java`, `crab/EffectEvents.java`. Cambiados: `CrabEggBlock` (ahora sirve para carbón y cobre), `CrabEggBlockEntity`, `PolishedEggItem`, `RoughEggItem`, `EggEvents`, `ModBlocks`, `ModEntities`, `ModEffects`, `LairFeature` (dos temas), `LairCommand`, `ClientSetup`, `ClientEvents`, `CrabEvents`, `ModRegistry`, `Config`.
+
+## v1.17.0 - Jefe de cobre con su textura y su música, y la mascota de cobre con pararrayos
+
+**1) El jefe de cobre usa el modelo grande.** Ahora el Cangrejo Titán de Cobre usa **el mismo modelo del jefe de carbón** (el de `boss.bbmodel`), con **tu textura** de cobre (`textures/entity/copper_crab_boss.png`; tiene el mismo dibujo de piezas que la de carbón, así que si la querés cambiar, es ese archivo). Mide 6 de alto y la caja que se golpea es de 3 por 6, igual que el de carbón. Las partículas del color del rayo ahora salen de las puntas de las pinzas grandes (cuando las levanta para juntar el rayo).
+
+**2) La música del jefe.** Cuando el jefe aparece (sale del huevo) empieza a sonar **"Colossus Beneath the Crags"** y sigue mientras esté vivo; cuando termina la canción vuelve a empezar. Se escucha hasta **15 bloques a la redonda**: a menos de 6 bloques de él suena a todo volumen y de ahí baja de a poco hasta apagarse a los 15. Cuando el jefe muere se corta. Mientras suena, la música de fondo del juego se calla.
+- El archivo es `assets/mutantraisedead/sounds/copper_boss_music.ogg` (convertí tu mp3 al formato que usa Minecraft, ogg). Si algún día querés cambiar la canción, reemplazá ese archivo (tiene que ser .ogg).
+- La música usa el control de volumen de **Música** de las opciones del juego.
+
+**3) Mascota de cobre con pararrayos** (la que nace del huevo pulido de cobre)
+1. Con un **pararrayos** en la mano, **clic izquierdo** (un golpe) a tu cangrejo de cobre mascota. El golpe no le hace daño: el pararrayos se queda parado arriba del caparazón (se gasta uno, salvo en creativo). Solo el dueño puede ponerlo, y una vez por cangrejo.
+2. Ya con el pararrayos puesto, cada **clic izquierdo** tuyo al cangrejo **cambia de rayo**: verde → violeta → amarillo → verde... (como sentar y seguir a un perro). Te avisa en pantalla cuál quedó elegido y de la punta del pararrayos salen partículas de ese color.
+3. Con el pararrayos puesto el cangrejo **deja de tirar el rayo común** y usa **solo el rayo elegido** (uno por vez), con una espera entre rayo y rayo (8 segundos, `petRodCooldownSeconds`):
+   - **Verde**: cura. Cuando vos, el cangrejo o alguna otra mascota tuya que esté a **menos de 7 bloques** están heridos, el cangrejo prepara el rayo (se abre un círculo verde en el piso hasta los 7 bloques) y al caer **cura 3 corazones a todos**: a sí mismo, a vos y a las otras mascotas. No ataca.
+   - **Violeta**: el rayo cae sobre el monstruo hostil que está atacando (marca un círculo antes) y le hace **daño + Electrocución** (10 segundos).
+   - **Amarillo**: igual pero con **Parálisis** (8 segundos).
+4. Si el cangrejo muere, suelta el pararrayos. Se guarda con el cangrejo (si salís del mundo y volvés, sigue puesto y con el rayo elegido).
+5. Solo la **mascota del huevo** puede llevar pararrayos (no los cangrejos de cobre salvajes ni los invocados con el hechizo).
+
+Todo se puede cambiar en el config (`petRodHealRadius`, `petRodHeal`, `petRodCooldownSeconds`, `petRodBoltDamage`, `petRodElectrocutionSeconds`, `petRodParalysisSeconds`).
+
+Cosas que supuse (decime si lo querías distinto)
+- "Uno por rotada" lo entendí como que con cada clic izquierdo elegís uno de los 3 y ese es el único que usa hasta que lo cambies. Si lo querías automático (que el cangrejo vaya rotando solo de un color al otro cada vez que tira), se cambia fácil.
+- El verde solo se tira si alguien necesita curación; no se gasta de balde.
+
+Archivos nuevos: `crab/BossMusicClient.java` (música), `crab/ModSounds.java`, `crab/CrabRodLayer.java` (dibujo del pararrayos), `crab/CrabRodEvents.java` (poner y cambiar con el clic izquierdo). Cambiados: `CopperCrabBossModel/Entity/Renderer` (modelo grande), `GrottolVariantEntity` (pararrayos y rayos), `GrottolVariantRenderer`, `ModEntities`, `MutantRaiseDead`, `Config`, `sounds.json`.
 

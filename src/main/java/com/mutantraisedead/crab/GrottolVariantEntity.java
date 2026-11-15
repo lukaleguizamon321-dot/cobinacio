@@ -72,6 +72,7 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.network.NetworkHooks;
 
+import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
@@ -88,12 +89,21 @@ import java.util.UUID;
  *  - redstone (te marca), diamante (ataca y da mala suerte al morir) y esmeralda (descuento a aldeanos)
  *    no se entierran
  *  - el cangrejo de carbon criado de un huevo (mascota) puede llevar un horno encima: cocina sin combustible (v1.15)
+ *  - el cangrejo de cobre criado de un huevo (mascota) puede llevar un pararrayos encima: con clic izquierdo cambia entre
+ *    rayo verde (cura al dueno y a las mascotas cerca), violeta (electrocuta) y amarillo (paraliza) (v1.17)
  */
 public class GrottolVariantEntity extends PathfinderMob {
     /** Mascota de carbon: lleva la mitad de arriba de un horno sobre el caparazon (se dibuja en CrabFurnaceLayer). */
     private static final EntityDataAccessor<Boolean> DATA_FURNACE = SynchedEntityData.defineId(GrottolVariantEntity.class, EntityDataSerializers.BOOLEAN);
     /** true mientras el horno del cangrejo esta cocinando algo (enciende la boca del horno y larga humo). */
     private static final EntityDataAccessor<Boolean> DATA_COOKING = SynchedEntityData.defineId(GrottolVariantEntity.class, EntityDataSerializers.BOOLEAN);
+
+    /** Mascota de cobre: lleva un pararrayos sobre el caparazon (se dibuja en CrabRodLayer). */
+    private static final EntityDataAccessor<Boolean> DATA_ROD = SynchedEntityData.defineId(GrottolVariantEntity.class, EntityDataSerializers.BOOLEAN);
+    /** Que rayo tiene elegido el pararrayos: 0 = verde, 1 = violeta, 2 = amarillo (ROD_MODES). */
+    private static final EntityDataAccessor<Integer> DATA_ROD_MODE = SynchedEntityData.defineId(GrottolVariantEntity.class, EntityDataSerializers.INT);
+    /** Los 3 rayos que puede rotar la mascota de cobre con pararrayos, en orden. */
+    public static final BoltColor[] ROD_MODES = {BoltColor.GREEN, BoltColor.VIOLET, BoltColor.YELLOW};
 
     private final GrottolVariant variant;
 
@@ -333,6 +343,8 @@ public class GrottolVariantEntity extends PathfinderMob {
         super.defineSynchedData();
         this.entityData.define(DATA_FURNACE, false);
         this.entityData.define(DATA_COOKING, false);
+        this.entityData.define(DATA_ROD, false);
+        this.entityData.define(DATA_ROD_MODE, 0);
     }
 
     public boolean hasFurnace() {
@@ -489,6 +501,200 @@ public class GrottolVariantEntity extends PathfinderMob {
     }
 
     // ------------------------------------------------------------------
+    // Pararrayos del cangrejo de cobre (v1.17): rayos verde, violeta y amarillo
+    // ------------------------------------------------------------------
+
+    private int rodCooldown = 60;
+    /** Ticks que faltan para que caiga el rayo (-1 = no esta preparando ninguno). */
+    private int rodWindup = -1;
+    /** Que rayo (indice de ROD_MODES) esta preparando. */
+    private int rodCastMode;
+    private Vec3 rodTarget = Vec3.ZERO;
+    private boolean rodReleased;
+
+    /** Solo el cangrejo de cobre que nacio de un huevo (mascota) puede llevar pararrayos. */
+    public boolean canCarryRod() {
+        return variant == GrottolVariant.COPPER && GuardHandler.isPet(this);
+    }
+
+    public boolean hasRod() {
+        return this.entityData.get(DATA_ROD);
+    }
+
+    /** El rayo que tiene elegido (verde, violeta o amarillo). */
+    public BoltColor getRodColor() {
+        return ROD_MODES[Math.floorMod(this.entityData.get(DATA_ROD_MODE), ROD_MODES.length)];
+    }
+
+    public void installRod() {
+        this.entityData.set(DATA_ROD, true);
+        this.entityData.set(DATA_ROD_MODE, 0);
+        this.rodCooldown = 40;
+        this.rodWindup = -1;
+    }
+
+    /** Clic izquierdo del dueno: pasa al siguiente rayo (verde, violeta, amarillo, verde...). */
+    public BoltColor cycleRodMode() {
+        this.entityData.set(DATA_ROD_MODE, (this.entityData.get(DATA_ROD_MODE) + 1) % ROD_MODES.length);
+        this.rodWindup = -1;
+        this.rodCooldown = Math.max(this.rodCooldown, 20);
+        return getRodColor();
+    }
+
+    /** La punta del pararrayos (las medidas salen de CrabRodLayer y de la escala del cangrejo chico). */
+    private Vec3 rodTip() {
+        double yaw = Math.toRadians(this.yBodyRot);
+        double back = 0.21D;
+        return new Vec3(getX() + Math.sin(yaw) * back, getY() + 1.4D, getZ() - Math.cos(yaw) * back);
+    }
+
+    /** Humito del color elegido en la punta del pararrayos (solo cliente). */
+    private void rodClientParticles() {
+        if (!hasRod() || !isAlive() || random.nextInt(8) != 0) {
+            return;
+        }
+        Vec3 tip = rodTip();
+        level().addParticle(getRodColor().dust(0.7F), tip.x, tip.y, tip.z, 0.0D, 0.01D, 0.0D);
+    }
+
+    /** El dueno, esta mascota y los aliados del mismo dueno que esten a menos de ROD_RADIUS bloques. */
+    private List<LivingEntity> rodAllies(ServerLevel level) {
+        double radius = Config.ROD_RADIUS.get();
+        UUID owner = GuardHandler.ownerIdOf(this);
+        List<LivingEntity> list = new ArrayList<>();
+        list.add(this);
+        if (owner == null) {
+            return list;
+        }
+        Player player = level.getPlayerByUUID(owner);
+        if (player != null && player.isAlive() && distanceToSqr(player) <= radius * radius) {
+            list.add(player);
+        }
+        list.addAll(level.getEntitiesOfClass(LivingEntity.class, getBoundingBox().inflate(radius),
+                e -> e != this && e.isAlive() && GuardHandler.isAllied(e) && owner.equals(GuardHandler.ownerIdOf(e))
+                        && distanceToSqr(e) <= radius * radius));
+        return list;
+    }
+
+    private boolean needsHealing(LivingEntity e) {
+        return e.getHealth() <= e.getMaxHealth() - 2.0F;
+    }
+
+    /** Pararrayos puesto: en vez del rayo comun, usa el rayo elegido. Verde = cura (no ataca); violeta y amarillo = pegan a monstruos. */
+    private void tickRod(ServerLevel level) {
+        if (rodCooldown > 0) {
+            rodCooldown--;
+        }
+        if (rodWindup >= 0) {
+            rodWindup--;
+            BoltColor casting = ROD_MODES[rodCastMode];
+            Vec3 tip = rodTip();
+            level.sendParticles(casting.dust(1.1F), tip.x, tip.y, tip.z, 3, 0.1D, 0.1D, 0.1D, 0.0D);
+            if (rodWindup % 2 == 0) {
+                if (casting == BoltColor.GREEN) {
+                    // el circulo que se va abriendo hasta el radio donde cura
+                    double radius = Config.ROD_RADIUS.get() * (1.0D - rodWindup / 20.0D);
+                    for (int i = 0; i < 16; i++) {
+                        double angle = Math.PI * 2.0D * i / 16.0D;
+                        level.sendParticles(casting.dust(0.9F), getX() + Math.cos(angle) * radius, getY() + 0.1D,
+                                getZ() + Math.sin(angle) * radius, 1, 0.0D, 0.0D, 0.0D, 0.0D);
+                    }
+                } else {
+                    for (int i = 0; i < 10; i++) {
+                        double angle = Math.PI * 2.0D * i / 10.0D;
+                        level.sendParticles(casting.dust(0.9F), rodTarget.x + Math.cos(angle) * 2.0D, rodTarget.y + 0.1D,
+                                rodTarget.z + Math.sin(angle) * 2.0D, 1, 0.0D, 0.0D, 0.0D, 0.0D);
+                    }
+                }
+            }
+            if (rodWindup < 0) {
+                castRod(level, casting);
+            }
+            return;
+        }
+        if (rodCooldown > 0) {
+            return;
+        }
+        BoltColor color = getRodColor();
+        if (color == BoltColor.GREEN) {
+            for (LivingEntity ally : rodAllies(level)) {
+                if (needsHealing(ally)) {
+                    startRod(0);
+                    return;
+                }
+            }
+            return;
+        }
+        LivingEntity target = getTarget();
+        if (target != null && target.isAlive() && distanceTo(target) <= 16.0D && hasLineOfSight(target)) {
+            rodTarget = target.position();
+            startRod(color == BoltColor.VIOLET ? 1 : 2);
+        }
+    }
+
+    private void startRod(int modeIndex) {
+        rodCastMode = modeIndex;
+        rodWindup = 20;
+        level().broadcastEntityEvent(this, (byte) 70);
+        playSound(SoundEvents.BEACON_ACTIVATE, 0.8F, 1.8F);
+    }
+
+    private void castRod(ServerLevel level, BoltColor color) {
+        rodCooldown = Config.ROD_COOLDOWN_SECONDS.get() * 20;
+        if (color == BoltColor.GREEN) {
+            spawnColoredBolt(level, color, position());
+            float heal = Config.ROD_HEAL.get().floatValue();
+            for (LivingEntity ally : rodAllies(level)) {
+                ally.heal(heal);
+                level.sendParticles(ParticleTypes.HEART, ally.getX(), ally.getY() + ally.getBbHeight() + 0.2D, ally.getZ(), 4, 0.3D, 0.2D, 0.3D, 0.0D);
+            }
+            double radius = Config.ROD_RADIUS.get();
+            for (int i = 0; i < 40; i++) {
+                double angle = Math.PI * 2.0D * i / 40.0D;
+                level.sendParticles(color.dust(1.2F), getX() + Math.cos(angle) * radius, getY() + 0.2D, getZ() + Math.sin(angle) * radius,
+                        1, 0.0D, 0.1D, 0.0D, 0.0D);
+            }
+            return;
+        }
+        spawnColoredBolt(level, color, rodTarget);
+        AABB area = new AABB(rodTarget.x - 2.4D, rodTarget.y - 1.0D, rodTarget.z - 2.4D, rodTarget.x + 2.4D, rodTarget.y + 4.0D, rodTarget.z + 2.4D);
+        List<LivingEntity> victims = level.getEntitiesOfClass(LivingEntity.class, area,
+                e -> e instanceof Enemy && e.isAlive() && !GuardHandler.isAllied(e));
+        for (LivingEntity victim : victims) {
+            victim.hurt(damageSources().mobAttack(this), Config.ROD_BOLT_DAMAGE.get().floatValue());
+            if (!victim.isAlive()) {
+                continue;
+            }
+            if (color == BoltColor.VIOLET) {
+                victim.addEffect(new MobEffectInstance(ModEffects.ELECTROCUTION.get(), Config.ROD_ELECTRO_SECONDS.get() * 20));
+            } else {
+                victim.addEffect(new MobEffectInstance(ModEffects.PARALYSIS.get(), Config.ROD_PARALYSIS_SECONDS.get() * 20));
+            }
+            level.sendParticles(color.dust(1.5F), victim.getX(), victim.getY() + victim.getBbHeight() * 0.5D, victim.getZ(), 12, 0.4D, 0.5D, 0.4D, 0.0D);
+        }
+    }
+
+    private void spawnColoredBolt(ServerLevel level, BoltColor color, Vec3 pos) {
+        ColoredBoltEntity bolt = ModEntities.COLORED_BOLT.get().create(level);
+        if (bolt != null) {
+            bolt.setColor(color);
+            bolt.moveTo(pos.x, pos.y, pos.z);
+            level.addFreshEntity(bolt);
+        }
+        level.playSound(null, pos.x, pos.y, pos.z, SoundEvents.LIGHTNING_BOLT_THUNDER, SoundSource.NEUTRAL, 1.5F, 1.2F);
+        level.playSound(null, pos.x, pos.y, pos.z, SoundEvents.LIGHTNING_BOLT_IMPACT, SoundSource.NEUTRAL, 1.0F, 1.2F);
+    }
+
+    /** Al morir suelta el pararrayos (el botin de los aliados esta anulado, por eso se hace aca). */
+    private void releaseRod() {
+        if (rodReleased || !hasRod() || !(level() instanceof ServerLevel serverLevel)) {
+            return;
+        }
+        rodReleased = true;
+        Containers.dropItemStack(serverLevel, getX(), getY() + 0.5D, getZ(), new ItemStack(Items.LIGHTNING_ROD));
+    }
+
+    // ------------------------------------------------------------------
     // Sonidos
     // ------------------------------------------------------------------
 
@@ -629,6 +835,7 @@ public class GrottolVariantEntity extends PathfinderMob {
     public void die(DamageSource source) {
         if (!level().isClientSide) {
             releaseFurnace();
+            releaseRod();
         }
         if (!level().isClientSide && source.getEntity() instanceof ServerPlayer killer) {
             switch (variant) {
@@ -689,6 +896,8 @@ public class GrottolVariantEntity extends PathfinderMob {
         tag.putInt("FurnaceCookTime", cookTime);
         tag.putInt("FurnaceCookTotal", cookTotal);
         tag.putFloat("FurnaceXp", furnaceXp);
+        tag.putBoolean("HasRod", hasRod());
+        tag.putInt("RodMode", this.entityData.get(DATA_ROD_MODE));
     }
 
     @Override
@@ -710,6 +919,8 @@ public class GrottolVariantEntity extends PathfinderMob {
         cookTime = tag.getInt("FurnaceCookTime");
         cookTotal = tag.getInt("FurnaceCookTotal");
         furnaceXp = tag.getFloat("FurnaceXp");
+        this.entityData.set(DATA_ROD, tag.getBoolean("HasRod"));
+        this.entityData.set(DATA_ROD_MODE, tag.getInt("RodMode"));
     }
 
     @Override
@@ -737,6 +948,7 @@ public class GrottolVariantEntity extends PathfinderMob {
         if (level().isClientSide) {
             clientParticles();
             furnaceClientParticles();
+            rodClientParticles();
             if (clawTicks > 0) {
                 clawTicks--;
             }
@@ -861,6 +1073,11 @@ public class GrottolVariantEntity extends PathfinderMob {
 
     /** Habilidades del cangrejo invocado: apuntan al objetivo que le asigna GuardHandler (monstruos hostiles). */
     private void tickSummoned(ServerLevel level) {
+        if (hasRod() && canCarryRod()) {
+            // con pararrayos usa el rayo elegido en vez del rayo comun
+            tickRod(level);
+            return;
+        }
         if (abilityCooldown > 0) {
             abilityCooldown--;
         }

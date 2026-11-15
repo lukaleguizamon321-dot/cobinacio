@@ -56,8 +56,9 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Cangrejo Titan de Cobre: el jefe de la guarida de cobre (3,5 de ancho y 4,6 de alto; el modelo es el del cangrejo
- * de cobre chico agrandado). Duerme como un huevo en el centro de la guarida (ver CrabEggBlock).
+ * Cangrejo Titan de Cobre: el jefe de la guarida de cobre (3 de ancho y 6 de alto, igual que el de carbon; el modelo
+ * es el mismo modelo grande de Blockbench, con la textura de cobre). Duerme como un huevo en el centro de la guarida
+ * (ver CrabEggBlock).
  *
  * Ataques:
  *  - Rayos de colores: junta energia en las pinzas (particulas del color que va a tirar), marca en el suelo donde va a caer
@@ -76,8 +77,10 @@ public class CopperCrabBossEntity extends PathfinderMob {
     public static final int ACTION_CHARGING = 5;
     public static final int ACTION_STUNNED = 6;
 
-    /** Cuanto se agranda el modelo del cangrejo chico (el renderer y las particulas de las pinzas usan este numero). */
-    public static final float MODEL_SCALE = 4.0F;
+    /** Cuanto se agranda el modelo (el modelo mide 5,25 de alto; x1,14 queda en 6). El renderer y las particulas de las pinzas usan este numero. */
+    public static final float MODEL_SCALE = 1.14F;
+    /** Cuanto levanta las pinzas al juntar el rayo (radianes; es la misma pose que usa el jefe de carbon para las bolas de fuego). */
+    public static final float CLAW_RAISE = 0.9F;
 
     private static final EntityDataAccessor<Integer> DATA_ACTION =
             SynchedEntityData.defineId(CopperCrabBossEntity.class, EntityDataSerializers.INT);
@@ -152,7 +155,7 @@ public class CopperCrabBossEntity extends PathfinderMob {
 
     @Override
     protected float getStandingEyeHeight(Pose pose, EntityDimensions dimensions) {
-        return 3.6F;
+        return 5.0F;
     }
 
     @Override
@@ -202,8 +205,9 @@ public class CopperCrabBossEntity extends PathfinderMob {
     }
 
     /**
-     * Donde esta la punta de una pinza (side = 1 la derecha, -1 la izquierda), con las pinzas levantadas.
-     * Son las medidas del modelo (pixeles de Blockbench) por el tamano del modelo.
+     * Donde esta la punta de una pinza (side = 1 la derecha, -1 la izquierda) con las pinzas levantadas (CLAW_RAISE).
+     * Son las medidas del modelo en pixeles de Blockbench (la punta esta a 17,4 al costado, 60,3 adelante y 84,8 de alto
+     * con las pinzas levantadas 0,9 radianes), por el tamano del modelo.
      */
     private Vec3 clawTip(int side) {
         double yaw = Math.toRadians(this.yBodyRot);
@@ -212,9 +216,9 @@ public class CopperCrabBossEntity extends PathfinderMob {
         double fz = Math.cos(yaw);
         double rx = -Math.cos(yaw);
         double rz = -Math.sin(yaw);
-        double ahead = 11.5D * unit;
-        double lateral = 5.5D * unit * side;
-        return new Vec3(getX() + fx * ahead + rx * lateral, getY() + 9.0D * unit, getZ() + fz * ahead + rz * lateral);
+        double ahead = 60.3D * unit;
+        double lateral = 17.4D * unit * side;
+        return new Vec3(getX() + fx * ahead + rx * lateral, getY() + 84.8D * unit, getZ() + fz * ahead + rz * lateral);
     }
 
     /** Gira el cuerpo hacia un punto, como mucho maxStep grados por tick. */
@@ -274,7 +278,7 @@ public class CopperCrabBossEntity extends PathfinderMob {
             if (level() instanceof ServerLevel serverLevel && awakenLeft % 4 == 0) {
                 serverLevel.sendParticles(new BlockParticleOption(ParticleTypes.BLOCK, Blocks.COPPER_BLOCK.defaultBlockState()),
                         getX(), getY() + 0.2D, getZ(), 24, 1.6D, 0.1D, 1.6D, 0.1D);
-                serverLevel.sendParticles(ParticleTypes.ELECTRIC_SPARK, getX(), getY() + 1.5D, getZ(), 12, 1.6D, 1.2D, 1.6D, 0.2D);
+                serverLevel.sendParticles(ParticleTypes.ELECTRIC_SPARK, getX(), getY() + 2.5D, getZ(), 16, 1.8D, 2.0D, 1.8D, 0.2D);
                 playSound(SoundEvents.COPPER_BREAK, 2.0F, 0.5F);
             }
             if (awakenLeft <= 0) {
@@ -539,7 +543,7 @@ public class CopperCrabBossEntity extends PathfinderMob {
     /** Rayo verde: cae sobre el propio jefe y lo cura; un jugador pegado al jefe tambien recibe el rayo y se cura. */
     private void greenBolt(ServerLevel level) {
         heal(getMaxHealth() * Config.GREEN_HEAL_PERCENT.get() / 100.0F);
-        level.sendParticles(ParticleTypes.HAPPY_VILLAGER, getX(), getY() + 2.0D, getZ(), 30, 1.4D, 1.5D, 1.4D, 0.0D);
+        level.sendParticles(ParticleTypes.HAPPY_VILLAGER, getX(), getY() + 3.0D, getZ(), 40, 1.6D, 2.2D, 1.6D, 0.0D);
         for (Player player : level.getEntitiesOfClass(Player.class, getBoundingBox().inflate(GREEN_NEAR, 1.5D, GREEN_NEAR),
                 p -> p.isAlive() && !p.isSpectator())) {
             player.heal(Config.GREEN_PLAYER_HEAL.get().floatValue());
@@ -651,7 +655,7 @@ public class CopperCrabBossEntity extends PathfinderMob {
             getNavigation().stop();
             stunLeft--;
             if (level() instanceof ServerLevel serverLevel && stunLeft % 6 == 0) {
-                serverLevel.sendParticles(ParticleTypes.ELECTRIC_SPARK, getX(), getY() + 4.0D, getZ(), 6, 0.9D, 0.4D, 0.9D, 0.1D);
+                serverLevel.sendParticles(ParticleTypes.ELECTRIC_SPARK, getX(), getY() + 5.0D, getZ(), 6, 0.9D, 0.4D, 0.9D, 0.1D);
             }
             if (stunLeft <= 0) {
                 finished = true;
@@ -714,11 +718,12 @@ public class CopperCrabBossEntity extends PathfinderMob {
         this.bossEvent.setProgress(getHealth() / getMaxHealth());
     }
 
-    /** Cliente: cuenta cuanto lleva la accion actual para animar el modelo, y larga chispas sueltas. */
+    /** Cliente: cuenta cuanto lleva la accion actual para animar el modelo, larga chispas sueltas y hace sonar la musica del jefe. */
     @Override
     public void tick() {
         super.tick();
         if (level().isClientSide) {
+            BossMusicClient.tick(this);
             int action = getAction();
             if (action != clientAction) {
                 clientAction = action;
@@ -728,7 +733,7 @@ public class CopperCrabBossEntity extends PathfinderMob {
             }
             if (isAlive() && random.nextInt(6) == 0) {
                 level().addParticle(ParticleTypes.ELECTRIC_SPARK,
-                        getX() + (random.nextDouble() - 0.5D) * 3.0D, getY() + 0.5D + random.nextDouble() * 3.5D,
+                        getX() + (random.nextDouble() - 0.5D) * 3.0D, getY() + 0.5D + random.nextDouble() * 5.0D,
                         getZ() + (random.nextDouble() - 0.5D) * 3.0D, 0.0D, 0.0D, 0.0D);
             }
         }

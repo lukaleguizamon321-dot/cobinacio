@@ -1,0 +1,10 @@
+{
+  "copper_boss_music": {
+    "sounds": [
+      {
+        "name": "mutantraisedead:copper_boss_music",
+        "stream": true
+      }
+    ]
+  }
+}

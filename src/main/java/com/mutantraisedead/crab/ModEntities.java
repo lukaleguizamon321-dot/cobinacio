@@ -42,10 +42,10 @@ public final class ModEntities {
     public static final RegistryObject<Item> COAL_BOSS_EGG = ITEMS.register("coal_crab_boss_spawn_egg", () ->
             new ForgeSpawnEggItem(COAL_BOSS, 0x1B1B1F, 0xE0701A, new Item.Properties()));
 
-    /** Jefe de la guarida de cobre: Cangrejo Titan de Cobre (3,5 de ancho, 4,6 de alto). Sale del huevo del pedestal. */
+    /** Jefe de la guarida de cobre: Cangrejo Titan de Cobre (3 de ancho, 6 de alto, igual que el de carbon). Sale del huevo del pedestal. */
     public static final RegistryObject<EntityType<CopperCrabBossEntity>> COPPER_BOSS = TYPES.register("copper_crab_boss", () ->
             EntityType.Builder.<CopperCrabBossEntity>of(CopperCrabBossEntity::new, MobCategory.MONSTER)
-                    .sized(3.5F, 4.6F)
+                    .sized(3.0F, 6.0F)
                     .fireImmune()
                     .clientTrackingRange(16)
                     .build(MutantRaiseDead.MODID + ":copper_crab_boss"));

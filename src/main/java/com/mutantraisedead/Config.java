@@ -32,6 +32,12 @@ public final class Config {
     public static final ForgeConfigSpec.IntValue MANA_LOCK_SECONDS;
     public static final ForgeConfigSpec.IntValue GREEN_HEAL_PERCENT;
     public static final ForgeConfigSpec.DoubleValue GREEN_PLAYER_HEAL;
+    public static final ForgeConfigSpec.IntValue ROD_RADIUS;
+    public static final ForgeConfigSpec.DoubleValue ROD_HEAL;
+    public static final ForgeConfigSpec.IntValue ROD_COOLDOWN_SECONDS;
+    public static final ForgeConfigSpec.DoubleValue ROD_BOLT_DAMAGE;
+    public static final ForgeConfigSpec.IntValue ROD_ELECTRO_SECONDS;
+    public static final ForgeConfigSpec.IntValue ROD_PARALYSIS_SECONDS;
     public static final ForgeConfigSpec.IntValue BOSS_WAKE_RANGE;
     public static final ForgeConfigSpec.IntValue EGG_INCUBATION_SECONDS;
     public static final ForgeConfigSpec.IntValue DETECTED_SECONDS;
@@ -173,6 +179,24 @@ public final class Config {
         GREEN_PLAYER_HEAL = b
                 .comment("Rayo verde: vida que recupera un jugador que este pegado al jefe cuando cae el rayo (corazones x2; 8.0 = 4 corazones).")
                 .defineInRange("greenPlayerHeal", 8.0D, 0.0D, 200.0D);
+        ROD_RADIUS = b
+                .comment("Mascota de cobre con pararrayos, rayo verde: a cuantos bloques cura al dueno y a las otras mascotas.")
+                .defineInRange("petRodHealRadius", 7, 1, 32);
+        ROD_HEAL = b
+                .comment("Mascota de cobre con pararrayos, rayo verde: vida que recupera cada uno (corazones x2; 6.0 = 3 corazones).")
+                .defineInRange("petRodHeal", 6.0D, 0.0D, 200.0D);
+        ROD_COOLDOWN_SECONDS = b
+                .comment("Mascota de cobre con pararrayos: segundos de espera entre un rayo y el siguiente.")
+                .defineInRange("petRodCooldownSeconds", 8, 1, 600);
+        ROD_BOLT_DAMAGE = b
+                .comment("Mascota de cobre con pararrayos, rayos violeta y amarillo: dano que le hacen a los monstruos (corazones x2).")
+                .defineInRange("petRodBoltDamage", 8.0D, 0.0D, 200.0D);
+        ROD_ELECTRO_SECONDS = b
+                .comment("Mascota de cobre con pararrayos, rayo violeta: segundos de Electrocucion en los monstruos.")
+                .defineInRange("petRodElectrocutionSeconds", 10, 1, 3600);
+        ROD_PARALYSIS_SECONDS = b
+                .comment("Mascota de cobre con pararrayos, rayo amarillo: segundos de Paralisis en los monstruos.")
+                .defineInRange("petRodParalysisSeconds", 8, 1, 3600);
         BOSS_WAKE_RANGE = b
                 .comment("A cuantos bloques de distancia del huevo de la guarida se despierta el jefe.")
                 .defineInRange("bossWakeRange", 7, 2, 24);

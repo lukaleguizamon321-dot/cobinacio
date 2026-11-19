@@ -16,7 +16,7 @@ import org.jetbrains.annotations.Nullable;
 import java.util.List;
 
 /**
- * Huevo de Cangrejo (de Carbon o de Cobre) pulido. Solo se puede poner arriba de su bloque de material puro (carbon / cobre);
+ * Huevo de Cangrejo (de Carbon, de Cobre o de Amatista) pulido. Solo se puede poner arriba de su bloque de material puro (carbon / cobre / amatista);
  * ahi incuba (10 minutos) y nace un cangrejo chico aliado. Si se pone en otro lado avisa y no se coloca.
  */
 public class PolishedEggItem extends BlockItem {
@@ -40,8 +40,7 @@ public class PolishedEggItem extends BlockItem {
 
     @Override
     public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag flag) {
-        boolean copper = getBlock() instanceof CrabEggBlock egg && egg.variant() == GrottolVariant.COPPER;
-        tooltip.add(Component.translatable(copper ? "item.mutantraisedead.copper_crab_egg.tip" : "item.mutantraisedead.coal_crab_egg.tip")
-                .withStyle(ChatFormatting.GRAY));
+        String key = getBlock() instanceof CrabEggBlock egg ? egg.tipKey() : "item.mutantraisedead.coal_crab_egg.tip";
+        tooltip.add(Component.translatable(key).withStyle(ChatFormatting.GRAY));
     }
 }

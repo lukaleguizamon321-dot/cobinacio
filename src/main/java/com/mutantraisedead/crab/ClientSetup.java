@@ -36,4 +36,11 @@ public final class ClientSetup {
         event.registerEntityRenderer(ModEntities.COPPER_BOSS.get(), CopperCrabBossRenderer::new);
         event.registerEntityRenderer(ModEntities.COLORED_BOLT.get(), ColoredBoltRenderer::new);
     }
+
+    @SubscribeEvent
+    public static void onAmethystRenderers(EntityRenderersEvent.RegisterRenderers event) {
+        event.registerEntityRenderer(ModEntities.AMETHYST_BOSS.get(), AmethystCrabBossRenderer::new);
+        event.registerEntityRenderer(ModEntities.CRYSTAL_SPIKE.get(), CrystalSpikeRenderer::new);
+        event.registerEntityRenderer(ModEntities.AMETHYST_SHARD.get(), AmethystShardRenderer::new);
+    }
 }

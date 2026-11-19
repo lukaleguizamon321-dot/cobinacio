@@ -132,9 +132,22 @@ public class GrottolVariantModel extends EntityModel<GrottolVariantEntity> {
         // Rebote al caminar
         bob = Math.abs(Mth.cos(limbSwing * 1.1F)) * 0.02F * walk;
 
+        // Sentada (mascota): se agacha un poquito y abre las patas
+        if (entity.isSitting()) {
+            for (int i = 0; i < 4; i++) {
+                int idx = 2 + i;
+                float side = i < 2 ? 1.0F : -1.0F;
+                rz[idx] = side * 0.3F;
+                ry[idx] = 0.0F;
+            }
+        }
+
         // Enterrandose: se hunde en el suelo y las patas se agitan
         int burrow = entity.clientBurrowTicks;
         sink = burrow < 0 ? 0.0F : Mth.clamp(burrow / 18.0F, 0.0F, 1.0F) * 0.9F;
+        if (entity.isSitting() && burrow < 0) {
+            sink = 0.1F;
+        }
         if (burrow >= 0) {
             for (int i = 0; i < 4; i++) {
                 int idx = 2 + i;

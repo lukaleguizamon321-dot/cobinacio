@@ -23,6 +23,11 @@ public final class Config {
     public static final ForgeConfigSpec.IntValue COAL_BOSS_HEALTH;
     public static final ForgeConfigSpec.IntValue COPPER_BOSS_HEALTH;
     public static final ForgeConfigSpec.DoubleValue COPPER_BOLT_DAMAGE;
+    public static final ForgeConfigSpec.IntValue AMETHYST_BOSS_HEALTH;
+    public static final ForgeConfigSpec.DoubleValue AMETHYST_LASER_DAMAGE;
+    public static final ForgeConfigSpec.DoubleValue AMETHYST_SPIKE_DAMAGE;
+    public static final ForgeConfigSpec.DoubleValue AMETHYST_SHARD_DAMAGE;
+    public static final ForgeConfigSpec.IntValue AMETHYST_CENTER_TURNS;
     public static final ForgeConfigSpec.IntValue ELECTRO_SECONDS;
     public static final ForgeConfigSpec.IntValue ELECTRO_METAL_SECONDS;
     public static final ForgeConfigSpec.IntValue PARALYSIS_SECONDS;
@@ -152,6 +157,21 @@ public final class Config {
         COPPER_BOLT_DAMAGE = b
                 .comment("Cangrejo Titan de Cobre: dano de cada rayo de color (corazones x2; 8.0 = 4 corazones). El rojo hace un poco mas.")
                 .defineInRange("copperBoltDamage", 8.0D, 0.0D, 200.0D);
+        AMETHYST_BOSS_HEALTH = b
+                .comment("Vida del jefe Cangrejo Titan de Amatista (300 = 150 corazones). Solo afecta a los jefes que aparezcan despues de cambiarlo.")
+                .defineInRange("amethystBossHealth", 300, 20, 10000);
+        AMETHYST_LASER_DAMAGE = b
+                .comment("Cangrejo Titan de Amatista: dano de cada golpe del rayo laser (corazones x2; 10.0 = 5 corazones). Cada uno solo puede golpear a la misma victima una vez por segundo.")
+                .defineInRange("amethystLaserDamage", 10.0D, 0.0D, 200.0D);
+        AMETHYST_SPIKE_DAMAGE = b
+                .comment("Cangrejo Titan de Amatista: dano de cada pincho de cristal (corazones x2; 6.0 = 3 corazones).")
+                .defineInRange("amethystSpikeDamage", 6.0D, 0.0D, 200.0D);
+        AMETHYST_SHARD_DAMAGE = b
+                .comment("Cangrejo Titan de Amatista: dano de cada amatista lanzada (corazones x2; 4.0 = 2 corazones).")
+                .defineInRange("amethystShardDamage", 4.0D, 0.0D, 200.0D);
+        AMETHYST_CENTER_TURNS = b
+                .comment("Cangrejo Titan de Amatista: cuantas vueltas da el laser cuando se va al centro (variantes con 1 y 2 laseres).")
+                .defineInRange("amethystCenterTurns", 5, 1, 20);
         ELECTRO_SECONDS = b
                 .comment("Rayo violeta: segundos de Electrocucion (una descarga de 1 corazon cada 2 segundos) sin armadura de metal.")
                 .defineInRange("electrocutionSeconds", 30, 1, 3600);

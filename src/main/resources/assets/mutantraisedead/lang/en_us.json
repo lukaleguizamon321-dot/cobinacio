@@ -112,5 +112,17 @@
   "message.mutantraisedead.crab_rod_mode": "Rayo del cangrejo: %s",
   "message.mutantraisedead.crab_rod_green": "verde (cura al dueño y a las mascotas cerca)",
   "message.mutantraisedead.crab_rod_violet": "violeta (electrocuta a los monstruos)",
-  "message.mutantraisedead.crab_rod_yellow": "amarillo (paraliza a los monstruos)"
+  "message.mutantraisedead.crab_rod_yellow": "amarillo (paraliza a los monstruos)",
+  "entity.mutantraisedead.amethyst_crab_boss": "Cangrejo Titán de Amatista",
+  "item.mutantraisedead.amethyst_crab_boss_spawn_egg": "Huevo de aparición de Cangrejo Titán de Amatista",
+  "entity.mutantraisedead.crystal_spike": "Pincho de cristal",
+  "entity.mutantraisedead.amethyst_shard": "Amatista lanzada",
+  "block.mutantraisedead.amethyst_crab_egg": "Huevo de Cangrejo de Amatista pulido",
+  "item.mutantraisedead.amethyst_crab_egg.tip": "Ponelo arriba de un bloque de amatista y esperá 10 minutos: nace un cangrejo de amatista chico que te obedece.",
+  "item.mutantraisedead.amethyst_crab_egg_rough": "Huevo de Cangrejo de Amatista con imperfecciones",
+  "item.mutantraisedead.amethyst_crab_egg_rough.tip": "Pulilo en una piedra de afilar.",
+  "message.mutantraisedead.egg_needs_block_amethyst": "Este huevo solo incuba arriba de un bloque de amatista.",
+  "message.mutantraisedead.egg_hatched_amethyst": "¡Nació un cangrejo de amatista! Ahora te protege.",
+  "message.mutantraisedead.crab_sit": "Tu cangrejo se quedó quieto.",
+  "message.mutantraisedead.crab_follow": "Tu cangrejo te sigue otra vez."
 }

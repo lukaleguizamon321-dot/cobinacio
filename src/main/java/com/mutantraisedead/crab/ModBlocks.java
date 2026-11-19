@@ -84,7 +84,7 @@ public final class ModBlocks {
     /** Huevo con imperfecciones: lo suelta el jefe; se pule en la piedra de afilar. */
     public static final RegistryObject<Item> COAL_EGG_ROUGH =
             ITEMS.register("coal_crab_egg_rough", () -> new RoughEggItem(
-                    new Item.Properties().rarity(Rarity.RARE).stacksTo(1).fireResistant(), false));
+                    new Item.Properties().rarity(Rarity.RARE).stacksTo(1).fireResistant(), GrottolVariant.COAL));
 
     /** Huevo de Cangrejo de Cobre (v1.16): igual que el de carbon, pero del jefe de la guarida de cobre; incuba sobre un bloque de cobre. */
     public static final RegistryObject<Block> COPPER_EGG = BLOCKS.register("copper_crab_egg", () -> new CrabEggBlock(
@@ -100,10 +100,26 @@ public final class ModBlocks {
                     new Item.Properties().rarity(Rarity.EPIC).stacksTo(1).fireResistant()));
     public static final RegistryObject<Item> COPPER_EGG_ROUGH =
             ITEMS.register("copper_crab_egg_rough", () -> new RoughEggItem(
-                    new Item.Properties().rarity(Rarity.RARE).stacksTo(1).fireResistant(), true));
+                    new Item.Properties().rarity(Rarity.RARE).stacksTo(1).fireResistant(), GrottolVariant.COPPER));
+
+    /** Huevo de Cangrejo de Amatista (v1.18): igual que los otros, pero del jefe de la guarida geoda; incuba sobre un bloque de amatista. */
+    public static final RegistryObject<Block> AMETHYST_EGG = BLOCKS.register("amethyst_crab_egg", () -> new CrabEggBlock(
+            BlockBehaviour.Properties.of()
+                    .mapColor(MapColor.COLOR_PURPLE)
+                    .strength(0.8F, 3.0F)
+                    .sound(SoundType.AMETHYST)
+                    .lightLevel(state -> 7)
+                    .noOcclusion(),
+            GrottolVariant.AMETHYST));
+    public static final RegistryObject<Item> AMETHYST_EGG_ITEM =
+            ITEMS.register("amethyst_crab_egg", () -> new PolishedEggItem(AMETHYST_EGG.get(),
+                    new Item.Properties().rarity(Rarity.EPIC).stacksTo(1).fireResistant()));
+    public static final RegistryObject<Item> AMETHYST_EGG_ROUGH =
+            ITEMS.register("amethyst_crab_egg_rough", () -> new RoughEggItem(
+                    new Item.Properties().rarity(Rarity.RARE).stacksTo(1).fireResistant(), GrottolVariant.AMETHYST));
 
     public static final RegistryObject<BlockEntityType<CrabEggBlockEntity>> CRAB_EGG_ENTITY =
-            BLOCK_ENTITIES.register("crab_egg", () -> BlockEntityType.Builder.of(CrabEggBlockEntity::new, COAL_EGG.get(), COPPER_EGG.get()).build(null));
+            BLOCK_ENTITIES.register("crab_egg", () -> BlockEntityType.Builder.of(CrabEggBlockEntity::new, COAL_EGG.get(), COPPER_EGG.get(), AMETHYST_EGG.get()).build(null));
 
     public static final RegistryObject<NestFeature> NEST_FEATURE =
             FEATURES.register("iron_crab_nest", () -> new NestFeature(NoneFeatureConfiguration.CODEC));
@@ -112,6 +128,10 @@ public final class ModBlocks {
     /** Guarida del Cangrejo Titan de Cobre (v1.16). */
     public static final RegistryObject<LairFeature> COPPER_LAIR_FEATURE =
             FEATURES.register("copper_lair", () -> new LairFeature(NoneFeatureConfiguration.CODEC, LairFeature.Theme.COPPER));
+
+    /** Guarida del Cangrejo Titan de Amatista (v1.18): una geoda gigante aplastada (ovalada). */
+    public static final RegistryObject<LairFeature> AMETHYST_LAIR_FEATURE =
+            FEATURES.register("amethyst_lair", () -> new LairFeature(NoneFeatureConfiguration.CODEC, LairFeature.Theme.AMETHYST));
 
     private ModBlocks() {
     }

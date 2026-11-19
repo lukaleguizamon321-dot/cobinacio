@@ -2,6 +2,7 @@ package com.mutantraisedead;
 
 import io.redspace.ironsspellbooks.capabilities.magic.SummonManager;
 import io.redspace.ironsspellbooks.entity.spells.root.RootEntity;
+import com.mutantraisedead.crab.GrottolVariantEntity;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerLevel;
@@ -85,6 +86,11 @@ public final class GuardHandler {
     /** true si es un cangrejo criado de un huevo (aliado permanente de su dueno). */
     public static boolean isPet(Entity entity) {
         return entity.getPersistentData().getBoolean(DATA_PET);
+    }
+
+    /** true si es una mascota que su dueno dejo sentada (no te sigue; sigue cocinando y defendiendose de lo que se le acerque). */
+    public static boolean isSitting(Entity entity) {
+        return entity instanceof GrottolVariantEntity crab && crab.isSitting() && isPet(entity);
     }
 
     /** Dueno de un aliado marcado (o null). */
@@ -210,6 +216,10 @@ public final class GuardHandler {
         }
 
         UUID ownerId = ownerOf(mob);
+        if (isSitting(mob)) {
+            tickSitting(level, mob, ownerId);
+            return;
+        }
         long expire = mob.getPersistentData().getLong(DATA_EXPIRE);
         ServerPlayer owner = ownerId == null ? null : level.getServer().getPlayerList().getPlayer(ownerId);
         if (owner == null || !owner.isAlive() || owner.level() != level || level.getGameTime() >= expire) {
@@ -243,6 +253,22 @@ public final class GuardHandler {
                 teleportNear(level, mob, owner);
             } else if (distSqr > 8.0D * 8.0D) {
                 mob.getNavigation().moveTo(owner, 1.15D);
+            }
+        }
+    }
+
+    /** Mascota sentada: se queda donde esta (aunque el dueno se vaya lejos) y solo le apunta a lo que tenga cerca. */
+    private static void tickSitting(ServerLevel level, Mob mob, UUID ownerId) {
+        mob.getNavigation().stop();
+        LivingEntity current = mob.getTarget();
+        if (current != null && (!isValidTarget(ownerId, current) || current.distanceToSqr(mob) > 18.0D * 18.0D)) {
+            mob.setTarget(null);
+            current = null;
+        }
+        if (current == null) {
+            List<Mob> nearby = level.getEntitiesOfClass(Mob.class, mob.getBoundingBox().inflate(14.0D), m -> isValidTarget(ownerId, m));
+            if (!nearby.isEmpty()) {
+                mob.setTarget(nearby.stream().min(Comparator.comparingDouble(m -> m.distanceToSqr(mob))).get());
             }
         }
     }

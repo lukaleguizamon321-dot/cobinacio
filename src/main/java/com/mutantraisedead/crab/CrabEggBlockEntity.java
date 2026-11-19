@@ -16,9 +16,9 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 
 /**
- * Cerebro del huevo (de carbon o de cobre, ver CrabEggBlock).
+ * Cerebro del huevo (de carbon, de cobre o de amatista, ver CrabEggBlock).
  *  - Huevo natural (pedestal = true): cada medio segundo mira si hay un jugador cerca; si lo hay, despierta al jefe.
- *  - Huevo pulido puesto por un jugador (pedestal = false): incuba mientras este arriba de su bloque de carbon / cobre.
+ *  - Huevo pulido puesto por un jugador (pedestal = false): incuba mientras este arriba de su bloque de carbon / cobre / amatista.
  *    Cuando se cumple el tiempo (10 minutos, ver eggIncubationSeconds) espera a que haya un jugador a menos de
  *    5 bloques; el primero que este cerca se vuelve el dueno del cangrejo chico que nace.
  */

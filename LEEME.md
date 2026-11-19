@@ -1,4 +1,4 @@
-# Cobinatio v1.17.0 (Forge 1.20.1)
+# Cobinatio v1.18.0 (Forge 1.20.1)
 
 Combina hechizos de Iron's Spells 'n Spellbooks con mobs de otros mods.
 
@@ -338,3 +338,38 @@ Cosas que supuse (decime si lo querías distinto)
 
 Archivos nuevos: `crab/BossMusicClient.java` (música), `crab/ModSounds.java`, `crab/CrabRodLayer.java` (dibujo del pararrayos), `crab/CrabRodEvents.java` (poner y cambiar con el clic izquierdo). Cambiados: `CopperCrabBossModel/Entity/Renderer` (modelo grande), `GrottolVariantEntity` (pararrayos y rayos), `GrottolVariantRenderer`, `ModEntities`, `MutantRaiseDead`, `Config`, `sounds.json`.
 
+## v1.18.0 - Jefe: Cangrejo Titán de Amatista (con su guarida geoda), y las mascotas se pueden sentar
+
+**1) El jefe.** Usa **tu modelo** (`boss_amatista_panza_piedra_arreglada.bbmodel`) con **tu textura** (`textures/entity/amethyst_crab_boss.png`, 512 x 512; si la querés cambiar, es ese archivo). Mide unos 8 bloques de alto con los cristales de la espalda y unos 11 de ancho con las patas abiertas; la caja que se golpea es de 3,6 de ancho por 6,4 de alto. Duerme como un huevo en el centro de su guarida, y cuando te acercás despierta (sale del suelo y ruge, 3 segundos sin poder lastimarlo). Tiene barra de vida violeta, 300 de vida (150 corazones) y no recibe daño de fuego ni de caída. **No tiene embestida.**
+
+**2) Sus ataques**
+- **Láser lento.** Apunta con una pinza (la del lado donde estás), junta energía un ratito (se ve una bolita violeta que crece, suena una campanita cada vez más aguda y marca con puntitos para dónde va) y dispara un rayo que te **sigue girando despacio** (16 grados por segundo; 20 cuando está enojado). Si corrés sin parar dando vueltas alrededor suyo, el rayo no te alcanza: te sigue, pero siempre llega tarde. Si parás o corrés derecho, te agarra. El rayo hace **5 corazones** de daño y como mucho te pega una vez por segundo. Se corta contra los bloques (podés taparte detrás de un pilar).
+- **Línea de pinchos.** Golpea el suelo y salen pinchos de cristal en **línea recta hacia donde estás**, uno atrás del otro. Son entidades: salen del piso, lastiman a quien los toque (**3 corazones** y te levantan un poquito) y **desaparecen a los 5 segundos**. La línea queda fija hacia donde estabas cuando golpeó, así que alcanza con moverse de costado.
+- **Ataque del centro.** Se va caminando al **centro de la guarida** (donde apareció), junta energía con un anillo en el piso que se cierra y hace **una de 3 variantes** al azar:
+  1. **Un láser que gira**: un rayo pegado al piso que da **5 vueltas** completas (6 segundos cada una). Hay que saltarlo.
+  2. **Dos láseres que giran**: igual pero con dos rayos, uno de cada lado (opuestos).
+  3. **Lluvia de amatistas**: no gira. Tira amatistas al azar en un **área de 12 bloques** alrededor del centro; cada una tarda un poquito en caer (se ve un círculo violeta en el piso donde va a caer) y hace **2 corazones** de daño en un área chica.
+- **Golpe normal** cuando estás cerca.
+- Con **menos de la mitad de vida** se enoja: espera menos entre ataques, el láser gira un poco más rápido y tira más amatistas.
+- **Si le tapan el camino** (por ejemplo cuando va al centro, o cuando te persigue y se traba contra una pared o un pilar) **rompe los bloques que estorban**. Respeta la regla del juego "los mobs rompen bloques" (`mobGriefing`): si la apagás, no rompe nada. No rompe bloques irrompibles.
+
+**3) La guarida geoda.** Es una **geoda gigante aplastada**, más ancha que alta y ovalada: el interior mide **38 bloques de ancho por 32 de fondo** y **13 de alto en el medio** (más baja hacia los costados, como una cúpula), con piso plano. La cáscara tiene 3 capas como una geoda de verdad: **amatista** adentro (con algo de amatista en brote), **calcita** y **basalto liso** afuera. Adentro hay **racimos y brotes de amatista** pegados a las paredes, al techo y al piso, y **pilares de cristal** con obsidiana llorona arriba que dan luz (y sirven de cobertura contra el láser). En el centro está el pedestal con el huevo del jefe (como en las otras guaridas), contra la pared hay **9 nidos de cangrejo de amatista** y hay una puerta de 5 x 6 hacia uno de los cuatro lados (del otro lado hay roca, hay que cavar). Aparece sola bajo tierra (mundo normal, entre las alturas -48 y 32, poco frecuente) y para probarla sin buscarla:
+`/cobinatio guarida amatista` (hace falta ser operador; te deja adentro, a un costado).
+
+**4) El huevo.** El jefe, al morir, suelta **12 a 24 bloques de amatista** y el **Huevo de Cangrejo de Amatista con imperfecciones**. Se hace igual que los otros: se pule en la **piedra de afilar** (sale el huevo pulido) y se coloca arriba de un **bloque de amatista** (también sirve el amatista en brote); a los 10 minutos nace un **cangrejo de amatista chico** que toma de dueño al primer jugador que esté a menos de 5 bloques. Los huevos que ponen los jugadores no despiertan al jefe; solo el de la guarida. Las texturas del huevo (bloque e ítems) las armé yo repintando las del huevo de carbón en violeta; si querés dibujarlas vos, son `textures/block/amethyst_crab_egg.png` y `textures/item/amethyst_crab_egg.png` / `amethyst_crab_egg_rough.png`.
+
+**5) Mascotas sentadas.** Todas las mascotas que nacen de los huevos (carbón, cobre y amatista) se pueden sentar para que no te sigan:
+- **Clic derecho** a tu cangrejo (con la mano que sea) lo **sienta**; otro clic derecho hace que **te siga otra vez**. Te avisa en pantalla. Se agacha un poquito y abre las patas para que se note.
+- La mascota de **carbón con horno** ya usa el clic derecho para abrir el horno, así que a esa se la sienta con **agachado (Shift) + clic derecho**. (Agachado + clic derecho funciona en todas.)
+- Solo el dueño puede sentarla. Sentada **no camina ni te sigue** (aunque te vayas lejos o salgas del mundo y vuelvas), pero **sigue funcionando**: el horno sigue cocinando, el pararrayos sigue tirando rayos y dispara a los monstruos que se le acerquen (hasta 14 bloques). Se guarda con el cangrejo.
+
+Todo se puede cambiar en el config: `amethystBossHealth`, `amethystLaserDamage` (10 = 5 corazones), `amethystSpikeDamage` (6 = 3 corazones), `amethystShardDamage` (4 = 2 corazones), `amethystCenterTurns` (cuántas vueltas da el láser del centro, 5).
+
+Cosas que supuse (decime si lo querías distinto)
+- "5 de daño" del láser lo entendí como **5 corazones** (10 puntos), igual que "2 corazones" de cada amatista. Si eran 5 puntos (2,5 corazones), poné `amethystLaserDamage = 5.0` en el config.
+- "Círculo aplastado / óvalo": la hice un óvalo visto de arriba (38 x 32) **y** aplastada de alto (13), como una geoda gigante apoyada en el piso. Si la querés más redonda o más ancha, se cambia fácil (los números están al principio de la parte de la geoda en `LairFeature.java`).
+- El jefe de amatista **no tiene música** (no la pediste); si querés una, se agrega igual que la del cobre.
+- Las mascotas se sientan con **clic derecho** (como el perro). Si lo querías con otro botón, se cambia.
+- El láser lento y el del centro **pueden dar el golpe una vez por segundo** a cada uno que toquen (no daño continuo), para que 5 corazones no te maten en un tick.
+
+Archivos nuevos: `crab/AmethystCrabBossEntity.java` (el jefe y sus ataques), `AmethystCrabBossModel.java` + `AmethystMeshData.java` (modelo), `AmethystCrabBossRenderer.java` (dibujo del jefe y el rayo), `CrystalSpikeEntity/Renderer` (pinchos), `AmethystShardEntity/Renderer` (amatistas). Cambiados: `LairFeature` (la geoda), `LairCommand`, `ModBlocks` (huevo de amatista y su guarida), `CrabEggBlock`, `RoughEggItem`, `PolishedEggItem`, `EggEvents`, `ModEntities`, `GrottolVariantEntity` + `GrottolVariantModel` + `GuardHandler` (mascotas sentadas), `Config`, `ModRegistry` (pestaña del creativo), `CrabEvents`, `ClientSetup`, textos en los 3 idiomas.

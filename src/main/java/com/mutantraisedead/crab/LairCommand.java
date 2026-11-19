@@ -20,6 +20,7 @@ import net.minecraftforge.fml.common.Mod;
  *   /cobinatio guarida          -> la de carbon
  *   /cobinatio guarida carbon   -> la de carbon
  *   /cobinatio guarida cobre    -> la del Cangrejo Titan de Cobre
+ *   /cobinatio guarida amatista -> la del Cangrejo Titan de Amatista (la geoda ovalada)
  * La construye alrededor tuyo y te deja adentro.
  */
 @Mod.EventBusSubscriber(modid = MutantRaiseDead.MODID)
@@ -34,16 +35,19 @@ public final class LairCommand {
                 .then(Commands.literal("guarida")
                         .executes(context -> build(context.getSource(), LairFeature.Theme.COAL))
                         .then(Commands.argument("tipo", StringArgumentType.word())
-                                .suggests((context, suggestions) -> SharedSuggestionProvider.suggest(new String[]{"carbon", "cobre"}, suggestions))
+                                .suggests((context, suggestions) -> SharedSuggestionProvider.suggest(new String[]{"carbon", "cobre", "amatista"}, suggestions))
                                 .executes(context -> {
                                     String type = StringArgumentType.getString(context, "tipo").toLowerCase(java.util.Locale.ROOT);
                                     if (type.equals("cobre") || type.equals("copper")) {
                                         return build(context.getSource(), LairFeature.Theme.COPPER);
                                     }
+                                    if (type.equals("amatista") || type.equals("amethyst")) {
+                                        return build(context.getSource(), LairFeature.Theme.AMETHYST);
+                                    }
                                     if (type.equals("carbon") || type.equals("coal")) {
                                         return build(context.getSource(), LairFeature.Theme.COAL);
                                     }
-                                    context.getSource().sendFailure(Component.literal("Tipos de guarida: carbon o cobre"));
+                                    context.getSource().sendFailure(Component.literal("Tipos de guarida: carbon, cobre o amatista"));
                                     return 0;
                                 }))));
     }
@@ -63,7 +67,11 @@ public final class LairCommand {
         // El centro es el pedestal con el huevo del jefe. Te dejamos a un costado, sobre el piso y fuera del alcance
         // del huevo (8.5 bloques), para que el jefe no despierte hasta que te acerques vos.
         player.teleportTo(level, center.getX() + 8.5D, center.getY(), center.getZ() + 0.5D, 90.0F, 0.0F);
-        String name = theme == LairFeature.Theme.COPPER ? "de cobre" : "de carbon";
+        String name = switch (theme) {
+            case COPPER -> "de cobre";
+            case AMETHYST -> "de amatista (geoda)";
+            default -> "de carbon";
+        };
         source.sendSuccess(() -> Component.literal("Guarida " + name + " creada. En el centro esta el huevo del jefe: cuando te acerques, despierta. Los nidos estan en la pared."), true);
         return 1;
     }

@@ -32,14 +32,14 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 import org.jetbrains.annotations.Nullable;
 
 /**
- * Huevo de jefe de cangrejo (v1.16: hay uno de carbon y uno de cobre, es la misma clase con distinta variante).
+ * Huevo de jefe de cangrejo (hay uno de carbon, uno de cobre y uno de amatista: es la misma clase con distinta variante).
  * Tiene dos usos segun la propiedad "pedestal":
  *
  *  - pedestal = true: el huevo NATURAL de la guarida. Duerme sobre el pedestal del centro; cuando alguien se acerca
  *    (o lo toca) desaparece, se destruye el pedestal y sale el Cangrejo Titan (de Carbon o de Cobre, segun la guarida).
  *    No se puede romper en supervivencia (si no, se salteaban al jefe).
  *  - pedestal = false: el huevo PULIDO que puso un jugador. Nunca invoca al jefe: si esta sobre su bloque de material
- *    puro (carbon / cobre), incuba (ver CrabEggBlockEntity) y nace un cangrejo chico aliado.
+ *    puro (carbon / cobre / amatista), incuba (ver CrabEggBlockEntity) y nace un cangrejo chico aliado.
  *    Se puede romper y devuelve el huevo pulido.
  */
 public class CrabEggBlock extends Block implements EntityBlock {
@@ -51,7 +51,7 @@ public class CrabEggBlock extends Block implements EntityBlock {
 
     private final GrottolVariant variant;
 
-    /** variant: COAL o COPPER (de que cangrejo es el huevo). */
+    /** variant: COAL, COPPER o AMETHYST (de que cangrejo es el huevo). */
     public CrabEggBlock(Properties properties, GrottolVariant variant) {
         super(properties);
         this.variant = variant;
@@ -67,6 +67,9 @@ public class CrabEggBlock extends Block implements EntityBlock {
      * para el de cobre vale el bloque de cobre en cualquiera de sus estados (nuevo, oxidado, encerado).
      */
     public boolean canIncubateOn(BlockState below) {
+        if (variant == GrottolVariant.AMETHYST) {
+            return below.is(Blocks.AMETHYST_BLOCK) || below.is(Blocks.BUDDING_AMETHYST);
+        }
         if (variant == GrottolVariant.COPPER) {
             return below.is(Blocks.COPPER_BLOCK) || below.is(Blocks.EXPOSED_COPPER)
                     || below.is(Blocks.WEATHERED_COPPER) || below.is(Blocks.OXIDIZED_COPPER)
@@ -78,12 +81,25 @@ public class CrabEggBlock extends Block implements EntityBlock {
 
     /** Clave del mensaje "hace falta el bloque de abajo" (el de cobre tiene el suyo). */
     public String needsBlockKey() {
-        return variant == GrottolVariant.COPPER ? "message.mutantraisedead.egg_needs_block_copper" : "message.mutantraisedead.egg_needs_block";
+        return switch (variant) {
+            case COPPER -> "message.mutantraisedead.egg_needs_block_copper";
+            case AMETHYST -> "message.mutantraisedead.egg_needs_block_amethyst";
+            default -> "message.mutantraisedead.egg_needs_block";
+        };
     }
 
     /** Clave del mensaje "nacio tu cangrejo". */
     public String hatchedKey() {
-        return variant == GrottolVariant.COPPER ? "message.mutantraisedead.egg_hatched_copper" : "message.mutantraisedead.egg_hatched";
+        return switch (variant) {
+            case COPPER -> "message.mutantraisedead.egg_hatched_copper";
+            case AMETHYST -> "message.mutantraisedead.egg_hatched_amethyst";
+            default -> "message.mutantraisedead.egg_hatched";
+        };
+    }
+
+    /** Clave del texto que se ve al pasar el mouse sobre el huevo pulido. */
+    public String tipKey() {
+        return "item.mutantraisedead." + variant.id.replace("grottol_", "") + "_crab_egg.tip";
     }
 
     @Override
@@ -188,9 +204,11 @@ public class CrabEggBlock extends Block implements EntityBlock {
             level.destroyBlock(new BlockPos(pos.getX(), baseY + 2, pos.getZ()), false);
         }
 
-        Mob boss = eggBlock.variant == GrottolVariant.COPPER
-                ? ModEntities.COPPER_BOSS.get().create(level)
-                : ModEntities.COAL_BOSS.get().create(level);
+        Mob boss = switch (eggBlock.variant) {
+            case COPPER -> ModEntities.COPPER_BOSS.get().create(level);
+            case AMETHYST -> ModEntities.AMETHYST_BOSS.get().create(level);
+            default -> ModEntities.COAL_BOSS.get().create(level);
+        };
         if (boss == null) {
             return;
         }

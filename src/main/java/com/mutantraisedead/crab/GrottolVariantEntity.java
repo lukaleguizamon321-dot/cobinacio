@@ -102,6 +102,8 @@ public class GrottolVariantEntity extends PathfinderMob {
     private static final EntityDataAccessor<Boolean> DATA_ROD = SynchedEntityData.defineId(GrottolVariantEntity.class, EntityDataSerializers.BOOLEAN);
     /** Que rayo tiene elegido el pararrayos: 0 = verde, 1 = violeta, 2 = amarillo (ROD_MODES). */
     private static final EntityDataAccessor<Integer> DATA_ROD_MODE = SynchedEntityData.defineId(GrottolVariantEntity.class, EntityDataSerializers.INT);
+    /** Mascota sentada (v1.18): se queda quieta en su lugar y no te sigue; igual cocina, tira rayos y dispara a lo que se acerque. */
+    private static final EntityDataAccessor<Boolean> DATA_SIT = SynchedEntityData.defineId(GrottolVariantEntity.class, EntityDataSerializers.BOOLEAN);
     /** Los 3 rayos que puede rotar la mascota de cobre con pararrayos, en orden. */
     public static final BoltColor[] ROD_MODES = {BoltColor.GREEN, BoltColor.VIOLET, BoltColor.YELLOW};
 
@@ -181,6 +183,7 @@ public class GrottolVariantEntity extends PathfinderMob {
 
     private void setupGoals() {
         this.goalSelector.addGoal(0, new FloatGoal(this));
+        this.goalSelector.addGoal(1, new SitGoal());
         switch (variant) {
             case DIAMOND -> {
                 // El de diamante no huye: ataca al jugador que se le acerca.
@@ -213,6 +216,28 @@ public class GrottolVariantEntity extends PathfinderMob {
         this.goalSelector.addGoal(4, new WaterAvoidingRandomStrollGoal(this, 0.5D));
         this.goalSelector.addGoal(5, new LookAtPlayerGoal(this, Player.class, 8.0F));
         this.goalSelector.addGoal(6, new RandomLookAroundGoal(this));
+    }
+
+    /** Mascota sentada: no camina (ni persigue, ni pasea); el resto de sus habilidades siguen andando. */
+    private class SitGoal extends Goal {
+        SitGoal() {
+            setFlags(EnumSet.of(Flag.MOVE, Flag.JUMP));
+        }
+
+        @Override
+        public boolean canUse() {
+            return isSitting() && GuardHandler.isPet(GrottolVariantEntity.this);
+        }
+
+        @Override
+        public boolean canContinueToUse() {
+            return canUse();
+        }
+
+        @Override
+        public void start() {
+            getNavigation().stop();
+        }
     }
 
     /** Cangrejo invocado de carbon o cobre: se acerca al objetivo hasta quedar a tiro. */
@@ -345,6 +370,15 @@ public class GrottolVariantEntity extends PathfinderMob {
         this.entityData.define(DATA_COOKING, false);
         this.entityData.define(DATA_ROD, false);
         this.entityData.define(DATA_ROD_MODE, 0);
+        this.entityData.define(DATA_SIT, false);
+    }
+
+    public boolean isSitting() {
+        return this.entityData.get(DATA_SIT);
+    }
+
+    public void setSitting(boolean sitting) {
+        this.entityData.set(DATA_SIT, sitting);
     }
 
     public boolean hasFurnace() {
@@ -376,6 +410,21 @@ public class GrottolVariantEntity extends PathfinderMob {
     /** Clic derecho del dueno: abre el menu del horno (la pantalla es la del horno sin la ranura de combustible). */
     @Override
     protected InteractionResult mobInteract(Player player, InteractionHand hand) {
+        // Mascota (v1.18): agachado + clic derecho, o solo clic derecho si no tiene un horno para abrir, alterna sentado / siguiendo
+        if (GuardHandler.isPet(this) && hand == InteractionHand.MAIN_HAND && isOwnedBy(player)
+                && (player.isShiftKeyDown() || !(hasFurnace() && canCarryFurnace()))) {
+            if (!level().isClientSide) {
+                boolean sit = !isSitting();
+                setSitting(sit);
+                getNavigation().stop();
+                player.displayClientMessage(Component.translatable(sit ? "message.mutantraisedead.crab_sit" : "message.mutantraisedead.crab_follow"), true);
+                if (level() instanceof ServerLevel serverLevel) {
+                    serverLevel.sendParticles(sit ? ParticleTypes.SMOKE : ParticleTypes.HAPPY_VILLAGER,
+                            getX(), getY() + 0.6D, getZ(), 6, 0.3D, 0.2D, 0.3D, 0.02D);
+                }
+            }
+            return InteractionResult.sidedSuccess(level().isClientSide);
+        }
         if (hasFurnace() && canCarryFurnace()) {
             if (!level().isClientSide && player instanceof ServerPlayer serverPlayer) {
                 if (isOwnedBy(player)) {
@@ -898,6 +947,7 @@ public class GrottolVariantEntity extends PathfinderMob {
         tag.putFloat("FurnaceXp", furnaceXp);
         tag.putBoolean("HasRod", hasRod());
         tag.putInt("RodMode", this.entityData.get(DATA_ROD_MODE));
+        tag.putBoolean("Sitting", isSitting());
     }
 
     @Override
@@ -921,6 +971,7 @@ public class GrottolVariantEntity extends PathfinderMob {
         furnaceXp = tag.getFloat("FurnaceXp");
         this.entityData.set(DATA_ROD, tag.getBoolean("HasRod"));
         this.entityData.set(DATA_ROD_MODE, tag.getInt("RodMode"));
+        setSitting(tag.getBoolean("Sitting"));
     }
 
     @Override

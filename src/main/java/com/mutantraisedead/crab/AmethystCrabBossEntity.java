@@ -1044,11 +1044,12 @@ public class AmethystCrabBossEntity extends PathfinderMob {
         this.bossEvent.setProgress(getHealth() / getMaxHealth());
     }
 
-    /** Cliente: cuenta cuanto lleva la accion actual para animar el modelo y guarda los angulos del rayo para dibujarlo suave. */
+    /** Cliente: cuenta cuanto lleva la accion actual para animar el modelo, guarda los angulos del rayo para dibujarlo suave y hace sonar la musica del jefe. */
     @Override
     public void tick() {
         super.tick();
         if (level().isClientSide) {
+            BossMusicClient.tick(this, ModSounds.AMETHYST_BOSS_MUSIC.get());
             int action = getAction();
             if (action != clientAction) {
                 clientAction = action;

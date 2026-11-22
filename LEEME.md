@@ -1,4 +1,4 @@
-# Cobinatio v1.18.0 (Forge 1.20.1)
+# Cobinatio v1.19.0 (Forge 1.20.1)
 
 Combina hechizos de Iron's Spells 'n Spellbooks con mobs de otros mods.
 
@@ -373,3 +373,19 @@ Cosas que supuse (decime si lo querías distinto)
 - El láser lento y el del centro **pueden dar el golpe una vez por segundo** a cada uno que toquen (no daño continuo), para que 5 corazones no te maten en un tick.
 
 Archivos nuevos: `crab/AmethystCrabBossEntity.java` (el jefe y sus ataques), `AmethystCrabBossModel.java` + `AmethystMeshData.java` (modelo), `AmethystCrabBossRenderer.java` (dibujo del jefe y el rayo), `CrystalSpikeEntity/Renderer` (pinchos), `AmethystShardEntity/Renderer` (amatistas). Cambiados: `LairFeature` (la geoda), `LairCommand`, `ModBlocks` (huevo de amatista y su guarida), `CrabEggBlock`, `RoughEggItem`, `PolishedEggItem`, `EggEvents`, `ModEntities`, `GrottolVariantEntity` + `GrottolVariantModel` + `GuardHandler` (mascotas sentadas), `Config`, `ModRegistry` (pestaña del creativo), `CrabEvents`, `ClientSetup`, textos en los 3 idiomas.
+
+## v1.19.0 - Música del jefe de amatista y la mascota de amatista que hace crecer amatista
+
+**1) Música del jefe.** El Cangrejo Titán de Amatista ahora tiene su canción, **"Sovereign of the Deep"** (la que mandaste). Funciona igual que la del jefe de cobre: empieza cuando el jefe aparece, se escucha **a todo volumen hasta 6 bloques** y va bajando hasta apagarse a los **15 bloques**, y se corta cuando el jefe muere (si la canción termina antes, vuelve a empezar). El archivo es `sounds/amethyst_boss_music.ogg` (si querés cambiarla, reemplazá ese archivo por otro .ogg con el mismo nombre). Para esto el reproductor de música (`BossMusicClient`) quedó general: sirve para cualquier jefe.
+
+**2) Mascota de amatista: "Amatista que crece".** Como no sabías qué hacerle, le inventé esto (la mascota de carbón tiene el horno y la de cobre el pararrayos; esta hace crecer cristales):
+- Cada **3 minutos** hace crecer **1 o 2 fragmentos de amatista** y los **suelta a sus pies** (con brillitos y el sonido de cristal de la amatista).
+- Unos 3 segundos antes **titila y suena una campanita cada vez más aguda**, para que sepas que está por soltar.
+- Si la dejás **sentada**, concentra la energía y tarda **la mitad** (1 minuto y medio). Así sirve de "granja" de amatista: la sentás al lado de tu base y pasás a juntar.
+- Solo la mascota (la que nació de un huevo); los cangrejos de amatista salvajes no lo hacen. El tiempo que lleva juntado se guarda con el cangrejo. Para que crezca tiene que estar en una zona cargada (cerca tuyo).
+- Se puede cambiar en el config: `amethystPetShardSeconds` (180 = 3 minutos).
+- Al nacer, el mensaje y el texto del huevo pulido ahora avisan que "te deja fragmentos de amatista".
+
+Si preferís otra función para esta mascota, se cambia (por ejemplo, un escudo de cristal que te protege cuando te pegan, o que tire amatistas a los monstruos como lo hacen la de carbón y la de cobre). Decime y lo cambio.
+
+Archivos cambiados: `crab/BossMusicClient.java`, `ModSounds.java`, `AmethystCrabBossEntity.java` y `CopperCrabBossEntity.java` (música), `GrottolVariantEntity.java` (mascota), `Config.java`, `sounds.json`, los 3 idiomas, `LEEME.md` y `gradle.properties`. Archivo nuevo: `sounds/amethyst_boss_music.ogg`.

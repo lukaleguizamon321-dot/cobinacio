@@ -28,6 +28,7 @@ public final class Config {
     public static final ForgeConfigSpec.DoubleValue AMETHYST_SPIKE_DAMAGE;
     public static final ForgeConfigSpec.DoubleValue AMETHYST_SHARD_DAMAGE;
     public static final ForgeConfigSpec.IntValue AMETHYST_CENTER_TURNS;
+    public static final ForgeConfigSpec.IntValue AMETHYST_PET_SHARD_SECONDS;
     public static final ForgeConfigSpec.IntValue ELECTRO_SECONDS;
     public static final ForgeConfigSpec.IntValue ELECTRO_METAL_SECONDS;
     public static final ForgeConfigSpec.IntValue PARALYSIS_SECONDS;
@@ -172,6 +173,9 @@ public final class Config {
         AMETHYST_CENTER_TURNS = b
                 .comment("Cangrejo Titan de Amatista: cuantas vueltas da el laser cuando se va al centro (variantes con 1 y 2 laseres).")
                 .defineInRange("amethystCenterTurns", 5, 1, 20);
+        AMETHYST_PET_SHARD_SECONDS = b
+                .comment("Mascota de amatista: cada cuantos segundos hace crecer 1 o 2 fragmentos de amatista y los suelta a sus pies (si esta sentada tarda la mitad).")
+                .defineInRange("amethystPetShardSeconds", 180, 10, 86400);
         ELECTRO_SECONDS = b
                 .comment("Rayo violeta: segundos de Electrocucion (una descarga de 1 corazon cada 2 segundos) sin armadura de metal.")
                 .defineInRange("electrocutionSeconds", 30, 1, 3600);

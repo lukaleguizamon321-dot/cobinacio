@@ -441,6 +441,38 @@ public class GrottolVariantEntity extends PathfinderMob {
         return super.mobInteract(player, hand);
     }
 
+    /** Mascota de amatista (v1.19): ticks que lleva juntando energia para el proximo fragmento de amatista. */
+    private int geodeTicks;
+
+    /**
+     * Mascota de amatista: hace crecer fragmentos de amatista y los suelta a sus pies cada amethystPetShardSeconds
+     * (3 minutos; la mitad si esta sentada). Unos segundos antes titila y suena una campanita para avisar.
+     */
+    private void tickGeode(ServerLevel level) {
+        if (variant != GrottolVariant.AMETHYST || !GuardHandler.isPet(this)) {
+            return;
+        }
+        int interval = Config.AMETHYST_PET_SHARD_SECONDS.get() * 20;
+        if (isSitting()) {
+            interval /= 2;
+        }
+        geodeTicks++;
+        int left = interval - geodeTicks;
+        if (left > 0 && left <= 60 && left % 12 == 0) {
+            level.sendParticles(ParticleTypes.END_ROD, getX(), getY() + 0.7D, getZ(), 2, 0.25D, 0.15D, 0.25D, 0.01D);
+            playSound(SoundEvents.AMETHYST_BLOCK_CHIME, 0.6F, 1.0F + (60 - left) / 60.0F);
+        }
+        if (geodeTicks >= interval) {
+            geodeTicks = 0;
+            spawnAtLocation(new ItemStack(Items.AMETHYST_SHARD, 1 + random.nextInt(2)), 0.4F);
+            level.sendParticles(new BlockParticleOption(ParticleTypes.BLOCK, Blocks.AMETHYST_BLOCK.defaultBlockState()),
+                    getX(), getY() + 0.5D, getZ(), 10, 0.3D, 0.2D, 0.3D, 0.05D);
+            level.sendParticles(ParticleTypes.END_ROD, getX(), getY() + 0.8D, getZ(), 6, 0.3D, 0.3D, 0.3D, 0.03D);
+            playSound(SoundEvents.AMETHYST_CLUSTER_PLACE, 1.0F, 1.0F);
+            playSound(SoundEvents.AMETHYST_BLOCK_RESONATE, 0.8F, 1.4F);
+        }
+    }
+
     /** Cocina con las recetas de horno, sin combustible, mientras el cangrejo este vivo. */
     private void tickFurnace(ServerLevel level) {
         if (!hasFurnace()) {
@@ -948,6 +980,7 @@ public class GrottolVariantEntity extends PathfinderMob {
         tag.putBoolean("HasRod", hasRod());
         tag.putInt("RodMode", this.entityData.get(DATA_ROD_MODE));
         tag.putBoolean("Sitting", isSitting());
+        tag.putInt("GeodeTicks", geodeTicks);
     }
 
     @Override
@@ -972,6 +1005,7 @@ public class GrottolVariantEntity extends PathfinderMob {
         this.entityData.set(DATA_ROD, tag.getBoolean("HasRod"));
         this.entityData.set(DATA_ROD_MODE, tag.getInt("RodMode"));
         setSitting(tag.getBoolean("Sitting"));
+        geodeTicks = tag.getInt("GeodeTicks");
     }
 
     @Override
@@ -1012,6 +1046,7 @@ public class GrottolVariantEntity extends PathfinderMob {
             return;
         }
         tickFurnace(serverLevel);
+        tickGeode(serverLevel);
         if (isSummoned()) {
             tickSummoned(serverLevel);
             return;

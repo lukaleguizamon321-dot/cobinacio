@@ -17,6 +17,10 @@ public final class ModSounds {
     public static final RegistryObject<SoundEvent> COPPER_BOSS_MUSIC = SOUNDS.register("copper_boss_music", () ->
             SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath(MutantRaiseDead.MODID, "copper_boss_music")));
 
+    /** Musica del Cangrejo Titan de Amatista ("Sovereign of the Deep"): suena mientras el jefe esta vivo. */
+    public static final RegistryObject<SoundEvent> AMETHYST_BOSS_MUSIC = SOUNDS.register("amethyst_boss_music", () ->
+            SoundEvent.createVariableRangeEvent(ResourceLocation.fromNamespaceAndPath(MutantRaiseDead.MODID, "amethyst_boss_music")));
+
     private ModSounds() {
     }
 

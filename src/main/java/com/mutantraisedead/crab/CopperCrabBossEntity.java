@@ -723,7 +723,7 @@ public class CopperCrabBossEntity extends PathfinderMob {
     public void tick() {
         super.tick();
         if (level().isClientSide) {
-            BossMusicClient.tick(this);
+            BossMusicClient.tick(this, ModSounds.COPPER_BOSS_MUSIC.get());
             int action = getAction();
             if (action != clientAction) {
                 clientAction = action;

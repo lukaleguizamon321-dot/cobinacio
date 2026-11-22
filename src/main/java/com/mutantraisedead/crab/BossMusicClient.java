@@ -3,11 +3,13 @@ package com.mutantraisedead.crab;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.sounds.AbstractTickableSoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance;
+import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.entity.LivingEntity;
 import net.minecraft.world.entity.player.Player;
 
 /**
- * Musica del jefe de cobre (solo cliente). Empieza cuando el jefe aparece y suena mientras este vivo.
+ * Musica de los jefes (cobre y amatista; solo cliente). Empieza cuando el jefe aparece y suena mientras este vivo.
  * Se escucha hasta 15 bloques a la redonda: a menos de 6 bloques suena a todo volumen y de ahi baja de a poco hasta
  * apagarse a los 15. (No usamos la distancia de Minecraft porque la cancion es estereo y asi no se apagaba.)
  * Cuando la cancion termina, empieza de nuevo mientras el jefe siga vivo.
@@ -23,8 +25,8 @@ public final class BossMusicClient {
     private BossMusicClient() {
     }
 
-    /** Lo llama el jefe en cada tick del cliente. */
-    public static void tick(CopperCrabBossEntity boss) {
+    /** Lo llama el jefe en cada tick del cliente, con la cancion que le toca (ver ModSounds). */
+    public static void tick(LivingEntity boss, SoundEvent music) {
         Minecraft mc = Minecraft.getInstance();
         if (mc.player == null || boss.isRemoved() || !boss.isAlive()) {
             return;
@@ -33,25 +35,25 @@ public final class BossMusicClient {
             return; // la musica de otro jefe ya esta sonando
         }
         if (current == null || current.isStopped() || current.boss != boss) {
-            start(mc, boss);
+            start(mc, boss, music);
         } else if (current.age > 60 && !mc.getSoundManager().isActive(current)) {
             // termino la cancion: vuelve a empezar
             current.halt();
-            start(mc, boss);
+            start(mc, boss, music);
         }
     }
 
-    private static void start(Minecraft mc, CopperCrabBossEntity boss) {
-        current = new BossMusic(boss);
+    private static void start(Minecraft mc, LivingEntity boss, SoundEvent music) {
+        current = new BossMusic(boss, music);
         mc.getSoundManager().play(current);
     }
 
     private static final class BossMusic extends AbstractTickableSoundInstance {
-        private final CopperCrabBossEntity boss;
+        private final LivingEntity boss;
         private int age;
 
-        BossMusic(CopperCrabBossEntity boss) {
-            super(ModSounds.COPPER_BOSS_MUSIC.get(), SoundSource.MUSIC, SoundInstance.createUnseededRandom());
+        BossMusic(LivingEntity boss, SoundEvent music) {
+            super(music, SoundSource.MUSIC, SoundInstance.createUnseededRandom());
             this.boss = boss;
             this.looping = false;
             this.delay = 0;

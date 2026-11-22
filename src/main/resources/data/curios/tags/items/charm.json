@@ -1,6 +1,8 @@
 {
   "replace": false,
   "values": [
-    "mutantraisedead:doble_almacen"
+    "mutantraisedead:doble_almacen",
+    "mutantraisedead:bobina",
+    "mutantraisedead:amethyst_goggles"
   ]
 }

@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "IAI",
+    "AHA",
+    "IAI"
+  ],
+  "key": {
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "A": {
+      "item": "minecraft:amethyst_shard"
+    },
+    "H": {
+      "item": "mutantraisedead:amethyst_heart"
+    }
+  },
+  "result": {
+    "item": "mutantraisedead:amethyst_goggles"
+  }
+}

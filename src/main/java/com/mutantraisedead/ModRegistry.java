@@ -156,6 +156,12 @@ public final class ModRegistry {
                             output.accept(nest.get());
                         }
                         output.accept(com.mutantraisedead.storage.ModStorage.DOUBLE_STORAGE.get());
+                        output.accept(ModItems.COPPER_HEART.get());
+                        output.accept(ModItems.BOBINA.get());
+                        output.accept(ModItems.AMETHYST_HEART.get());
+                        output.accept(com.mutantraisedead.goggles.ModGoggles.GOGGLES.get());
+                        output.accept(ModItems.DISC_COPPER_BOSS.get());
+                        output.accept(ModItems.DISC_AMETHYST_BOSS.get());
                     })
                     .build());
 

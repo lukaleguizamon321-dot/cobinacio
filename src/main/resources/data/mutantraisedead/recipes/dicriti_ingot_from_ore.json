@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:blasting",
+  "category": "misc",
+  "ingredient": {
+    "item": "mutantraisedead:dicriti_ore"
+  },
+  "result": "mutantraisedead:dicriti_ingot",
+  "experience": 1.0,
+  "cookingtime": 100
+}

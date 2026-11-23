@@ -159,8 +159,16 @@ public final class ModRegistry {
                         output.accept(ModItems.COPPER_HEART.get());
                         output.accept(ModItems.BOBINA.get());
                         output.accept(ModItems.AMETHYST_HEART.get());
+                        output.accept(com.mutantraisedead.goggles.ModGoggles.GOGGLES.get());
                         output.accept(ModItems.DISC_COPPER_BOSS.get());
                         output.accept(ModItems.DISC_AMETHYST_BOSS.get());
+                        output.accept(com.mutantraisedead.dicriti.ModDicriti.DICRITI_ORE_ITEM.get());
+                        output.accept(com.mutantraisedead.dicriti.ModDicriti.RAW_DICRITI.get());
+                        output.accept(com.mutantraisedead.dicriti.ModDicriti.DICRITI_INGOT.get());
+                        output.accept(com.mutantraisedead.dicriti.DicritiPick.withAbility(
+                                new ItemStack(net.minecraft.world.item.Items.DIAMOND_PICKAXE)));
+                        output.accept(com.mutantraisedead.dicriti.DicritiPick.withAbility(
+                                new ItemStack(net.minecraft.world.item.Items.NETHERITE_PICKAXE)));
                     })
                     .build());
 

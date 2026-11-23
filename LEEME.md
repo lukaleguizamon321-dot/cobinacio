@@ -1,4 +1,4 @@
-# Cobinatio v1.20.0 (Forge 1.20.1)
+# Cobinatio v1.22.0 (Forge 1.20.1)
 
 Combina hechizos de Iron's Spells 'n Spellbooks con mobs de otros mods.
 
@@ -411,3 +411,52 @@ Los logros de jefe se los lleva el que le dio el golpe final **y todos los jugad
 Notas sobre las texturas: las saqué de las imágenes del PowerPoint. El corazón de cobre y el de amatista son de 10x10 píxeles y la bobina de 12x12, así que se ven con "píxeles más grandes" que el resto; los discos eran de 16x10 y los puse centrados en un cuadrado de 16x16. Si querés que se vean mejor, mandame las imágenes originales (.png) y las reemplazo.
 
 Archivos nuevos: `ModItems.java`, `BobinaItem.java`, `TipItem.java`, `BossRewards.java` (logros), la receta de la bobina, 3 logros, 5 texturas y 5 modelos de ítem, y `data/mutantraisedead/curios/slots/charm.json` (las 3 ranuras). Cambiados: `MutantRaiseDead.java`, `ModRegistry.java` (pestaña), `Config.java`, las tablas de botín de los jefes de cobre y de amatista, `curios/tags/items/charm.json`, los 3 idiomas, `LEEME.md` y `gradle.properties`.
+
+## v1.21.0 - Gafas de amatista: el láser del jefe, pero para vos
+
+Segunda entrega de tu PowerPoint (la tercera es el dicriti con el pico lanzable, v1.22.0).
+
+**Cómo se consiguen.** Con el **corazón de amatista** (lo suelta el Cangrejo Titán de Amatista) en el centro de la mesa de crafteo, **4 lingotes de hierro en las esquinas** y **4 fragmentos de amatista** arriba, abajo, izquierda y derecha, como en tu dibujo.
+
+**Dónde van.** En la ranura de amuletos, como la Bobina y el Doble Almacén (ya hay 3 ranuras desde la v1.20.0).
+
+**Cómo se usan.**
+- Apretás la tecla **G** y sale el láser violeta del jefe desde tus ojos, hacia donde mirás. La tecla se cambia en *Opciones > Controles > Cobinatio > Láser de las Gafas de amatista*.
+- Dura **15 segundos**. Si apretás la tecla de nuevo se apaga antes.
+- Lastima **dos veces por segundo** (5 de daño cada vez, o sea 2 corazones y medio) a todo lo que toque, hasta el primer bloque, con alcance de **40 bloques**. No te lastima a vos, ni a tus mascotas, ni a tus aliados (guardianes, plantas, mascotas de los huevos).
+- Cuando se apaga, tu **visión queda reducida 8 segundos** (usé la Ceguera de Minecraft: la pantalla se oscurece y no podés correr) y las gafas tardan **1 minuto** en recargarse. Mientras se recargan se ve la barrita gris sobre el ítem y, si apretás la tecla, te avisa cuánto falta.
+- Los otros jugadores ven tu rayo también.
+
+**Color del láser.** Las gafas solas disparan violeta. Si ponés **las gafas y un tinte** en la mesa de crafteo (solo esas dos cosas), salen unas gafas con el láser de ese color. Sirven los 16 tintes (el negro se ve gris azulado porque el negro no brilla). El color no cambia el daño. La textura de las gafas no cambia, pero el texto del ítem dice qué color tienen.
+
+**Logros** (pestaña Cobinatio):
+- **Cíclope**: conseguir las Gafas de amatista.
+- **Me proyecto** (secreto, no se ve hasta que lo conseguís): matar a un mob con el láser **rojo**. Con uno basta.
+
+**Config** (si querés cambiar los números): `gogglesSeconds` (15), `gogglesCooldownSeconds` (60), `gogglesBlindSeconds` (8, con 0 no hay visión reducida) y `gogglesDamage` (5.0).
+
+Si preferís otra desventaja en vez de la ceguera (por ejemplo una pantalla oscura a los costados, o lentitud), se cambia. Decime.
+
+Archivos nuevos: la carpeta `goggles/` (11 archivos de código), la receta de las gafas, la receta de teñirlas, 2 logros, la textura y el modelo del ítem. Cambiados: `MutantRaiseDead.java`, `ModRegistry.java`, `BossRewards.java`, `Config.java`, `curios/tags/items/charm.json`, los 3 idiomas, `LEEME.md` y `gradle.properties`.
+
+## v1.22.0 - Dicriti: el material nuevo y el pico que se lanza
+
+Tercera y última entrega de tu PowerPoint.
+
+**Dónde se encuentra.** La **mena de dicriti** aparece en el mundo normal (Overworld), **muy rara y solo cerca de la bedrock** (entre las alturas Y -62 y Y -50, dentro de la pizarra profunda), en vetas chiquitas de 3 bloques; más o menos 1 veta cada 6 chunks. Se pica con un **pico de hierro o mejor**. Con Fortuna suelta más y con Toque de seda te la llevás entera.
+
+**Cómo se funde.** La mena y el **dicriti en bruto** se funden **solo en el alto horno** (no sirve el horno común) y dan el **lingote de dicriti**.
+
+**Pico lanzable.** Poné **un pico (el que quieras, de cualquier material) y un lingote de dicriti** en la mesa de crafteo, en cualquier lugar. Sale el mismo pico, con sus encantamientos y su desgaste, y con la habilidad (el texto del pico lo explica). Después:
+- **Clic derecho** y lo lanzás hacia donde mirás. Viaja hasta 24 bloques y **vuelve solo** a tu inventario (a la misma ranura de donde salió).
+- Si **pega contra un bloque**, lo pica **al instante** y suelta lo que soltaría con ese pico en la mano (Fortuna y Toque de seda sirven). Rompe un bloque por lanzamiento y gasta 1 de durabilidad. Si el bloque es muy duro, como la **obsidiana**, no se rompe de una: queda agrietado y hacen falta **varios lanzamientos** (el progreso se acumula; se pierde si pasan 20 segundos sin pegarle). Lo irrompible (bedrock) no. Un pico que no sirve para ese bloque (por ejemplo, de madera contra obsidiana) tampoco.
+- Si **pega contra una criatura**, la **agarra y la arrastra hacia vos** mientras el pico vuelve (un zombi lejano termina a tus pies). A los jefes y a las criaturas enormes no los mueve. No agarra a tus mascotas ni a tus aliados.
+- Si se muere el jugador, se desconecta o pasa algo raro, el pico **no se pierde**: cae como objeto al suelo.
+
+**Config** (si querés cambiar los números): `dicritiPickRange` (24 bloques), `dicritiPickPower` (5.0: segundos de picado que hace cada lanzamiento; con 5.0 casi todo se rompe de una y la obsidiana necesita 2 o 3 lanzamientos) y `dicritiPickPull` (true; con false no arrastra criaturas).
+
+**Pestaña del creativo.** Aparecen la mena, el dicriti en bruto, el lingote y dos picos ya listos (de diamante y de netherita) para probar.
+
+El dicriti por ahora solo sirve para esto; después le agregamos más funciones, como dijiste.
+
+Archivos nuevos: la carpeta `dicriti/` (8 archivos de código), 3 texturas, 4 modelos, el estado del bloque, la tabla de botín de la mena, 3 recetas (2 de alto horno y la del pico), la generación en el mundo (3 archivos) y 2 etiquetas de bloques. Cambiados: `MutantRaiseDead.java`, `ModRegistry.java`, `Config.java`, los 3 idiomas, `LEEME.md` y `gradle.properties`.

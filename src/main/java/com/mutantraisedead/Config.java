@@ -30,6 +30,13 @@ public final class Config {
     public static final ForgeConfigSpec.IntValue AMETHYST_CENTER_TURNS;
     public static final ForgeConfigSpec.IntValue AMETHYST_PET_SHARD_SECONDS;
     public static final ForgeConfigSpec.DoubleValue BOBINA_LIGHTNING_POWER;
+    public static final ForgeConfigSpec.IntValue GOGGLES_SECONDS;
+    public static final ForgeConfigSpec.IntValue GOGGLES_COOLDOWN_SECONDS;
+    public static final ForgeConfigSpec.IntValue GOGGLES_BLIND_SECONDS;
+    public static final ForgeConfigSpec.DoubleValue GOGGLES_DAMAGE;
+    public static final ForgeConfigSpec.IntValue DICRITI_RANGE;
+    public static final ForgeConfigSpec.DoubleValue DICRITI_POWER;
+    public static final ForgeConfigSpec.BooleanValue DICRITI_PULL;
     public static final ForgeConfigSpec.IntValue ELECTRO_SECONDS;
     public static final ForgeConfigSpec.IntValue ELECTRO_METAL_SECONDS;
     public static final ForgeConfigSpec.IntValue PARALYSIS_SECONDS;
@@ -180,6 +187,27 @@ public final class Config {
         BOBINA_LIGHTNING_POWER = b
                 .comment("Bobina (artefacto): cuanto sube el poder de los hechizos de rayo de Iron's Spells (0.20 = +20%).")
                 .defineInRange("bobinaLightningPower", 0.20D, 0.0D, 5.0D);
+        GOGGLES_SECONDS = b
+                .comment("Gafas de amatista: cuantos segundos dura el laser cuando lo prendes.")
+                .defineInRange("gogglesSeconds", 15, 1, 600);
+        GOGGLES_COOLDOWN_SECONDS = b
+                .comment("Gafas de amatista: segundos de espera (recarga) despues de usar el laser. 0 = sin espera.")
+                .defineInRange("gogglesCooldownSeconds", 60, 0, 86400);
+        GOGGLES_BLIND_SECONDS = b
+                .comment("Gafas de amatista: segundos que la vision queda reducida (Ceguera) cuando el laser se termina. 0 = no pasa nada.")
+                .defineInRange("gogglesBlindSeconds", 8, 0, 600);
+        GOGGLES_DAMAGE = b
+                .comment("Gafas de amatista: dano de cada golpe del laser (se repite dos veces por segundo sobre lo que toca; 5.0 = lo mismo que el laser del jefe, 2.5 corazones).")
+                .defineInRange("gogglesDamage", 5.0D, 0.0D, 200.0D);
+        DICRITI_RANGE = b
+                .comment("Pico de dicriti: hasta cuantos bloques viaja el pico lanzado antes de volver solo.")
+                .defineInRange("dicritiPickRange", 24, 4, 64);
+        DICRITI_POWER = b
+                .comment("Pico de dicriti: cuantos segundos de picado hace cada lanzamiento que pega en un bloque (como si lo picaras con ese pico en la mano). Con 5.0 lo normal se rompe al instante y la obsidiana necesita 2 o 3 lanzamientos.")
+                .defineInRange("dicritiPickPower", 5.0D, 0.1D, 600.0D);
+        DICRITI_PULL = b
+                .comment("Pico de dicriti: si es true, la criatura que golpea el pico es arrastrada hacia el jugador (los jefes y las criaturas enormes no).")
+                .define("dicritiPickPull", true);
         ELECTRO_SECONDS = b
                 .comment("Rayo violeta: segundos de Electrocucion (una descarga de 1 corazon cada 2 segundos) sin armadura de metal.")
                 .defineInRange("electrocutionSeconds", 30, 1, 3600);

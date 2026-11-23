@@ -28,6 +28,8 @@ public class MutantRaiseDead {
         com.mutantraisedead.crab.ModSounds.register(modBus);
         com.mutantraisedead.storage.ModStorage.register(modBus);
         ModItems.register(modBus);
+        com.mutantraisedead.goggles.ModGoggles.register(modBus);
+        com.mutantraisedead.dicriti.ModDicriti.register(modBus);
         ModLoadingContext.get().registerConfig(ModConfig.Type.COMMON, Config.SPEC);
     }
 }

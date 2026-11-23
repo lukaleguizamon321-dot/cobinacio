@@ -1,0 +1,26 @@
+{
+  "parent": "mutantraisedead:root",
+  "display": {
+    "icon": {
+      "item": "mutantraisedead:bobina"
+    },
+    "title": {
+      "translate": "advancements.mutantraisedead.cien_voltios.title"
+    },
+    "description": {
+      "translate": "advancements.mutantraisedead.cien_voltios.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "trigger": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "rewards": {
+    "experience": 30
+  }
+}

@@ -140,18 +140,5 @@
   "advancements.mutantraisedead.cien_voltios.title": "100 voltios",
   "advancements.mutantraisedead.cien_voltios.description": "Crafteaste una Bobina con el corazón del Titán de Cobre",
   "advancements.mutantraisedead.su_brillo.title": "Su brillo no pudo contra mí",
-  "advancements.mutantraisedead.su_brillo.description": "Derrotaste al Cangrejo Titán de Amatista",
-  "item.mutantraisedead.amethyst_goggles": "Gafas de amatista",
-  "tooltip.mutantraisedead.amethyst_goggles.use": "Va en la ranura de amuletos. Apretá %s para disparar el láser del Cangrejo Titán de Amatista (otra vez la tecla lo apaga).",
-  "tooltip.mutantraisedead.amethyst_goggles.cost": "El láser dura %s s. Después tu visión queda reducida %s s y las gafas tardan %s s en recargarse.",
-  "tooltip.mutantraisedead.amethyst_goggles.dye_hint": "Combinalas con un tinte en la mesa de crafteo para cambiar el color del láser.",
-  "tooltip.mutantraisedead.amethyst_goggles.color": "Color del láser: %s",
-  "key.mutantraisedead.goggles": "Láser de las Gafas de amatista",
-  "key.categories.mutantraisedead": "Cobinatio",
-  "message.mutantraisedead.goggles_cooldown": "Las gafas se están recargando: %s s",
-  "message.mutantraisedead.goggles_left": "Láser: %s s",
-  "advancements.mutantraisedead.ciclope.title": "Cíclope",
-  "advancements.mutantraisedead.ciclope.description": "Conseguiste las Gafas de amatista: un solo ojo y mucho láser",
-  "advancements.mutantraisedead.me_proyecto.title": "Me proyecto",
-  "advancements.mutantraisedead.me_proyecto.description": "Mataste a un mob con el láser rojo de las Gafas de amatista"
+  "advancements.mutantraisedead.su_brillo.description": "Derrotaste al Cangrejo Titán de Amatista"
 }

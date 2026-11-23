@@ -36,6 +36,30 @@
           "name": "mutantraisedead:amethyst_crab_egg_rough"
         }
       ]
+    },
+    {
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "mutantraisedead:amethyst_heart"
+        }
+      ]
+    },
+    {
+      "rolls": 1,
+      "conditions": [
+        {
+          "condition": "minecraft:random_chance",
+          "chance": 0.25
+        }
+      ],
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "mutantraisedead:disc_amethyst_boss"
+        }
+      ]
     }
   ]
 }

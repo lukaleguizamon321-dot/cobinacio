@@ -1,0 +1,26 @@
+{
+  "parent": "mutantraisedead:root",
+  "display": {
+    "icon": {
+      "item": "mutantraisedead:copper_heart"
+    },
+    "title": {
+      "translate": "advancements.mutantraisedead.ni_el_rayo.title"
+    },
+    "description": {
+      "translate": "advancements.mutantraisedead.ni_el_rayo.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "criteria": {
+    "trigger": {
+      "trigger": "minecraft:impossible"
+    }
+  },
+  "rewards": {
+    "experience": 100
+  }
+}

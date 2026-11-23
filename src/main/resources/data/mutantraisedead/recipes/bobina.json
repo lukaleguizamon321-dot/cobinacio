@@ -1,0 +1,23 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "pattern": [
+    "NIN",
+    "IHI",
+    "NIN"
+  ],
+  "key": {
+    "N": {
+      "item": "minecraft:iron_nugget"
+    },
+    "I": {
+      "item": "minecraft:iron_ingot"
+    },
+    "H": {
+      "item": "mutantraisedead:copper_heart"
+    }
+  },
+  "result": {
+    "item": "mutantraisedead:bobina"
+  }
+}
